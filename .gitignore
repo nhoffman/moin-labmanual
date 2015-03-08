@@ -1,0 +1,4 @@
+*.pyc
+/dist/
+/moinlm.egg-info/
+/moinlm/data/ver
