@@ -31,9 +31,11 @@ After executing the above script, start the standalone server::
 
   ./wikiserver.py
 
-Now install the underlay (contains system and help pages). First, open
-your browser and point it to http://localhost:8080 then log in using
-the user name and password above. After logging in, go here:
+At this point you can open your browser and point it to
+http://localhost:8080 - but there isn't much to see until we install
+the "underlay", containing system and help pages. To do so, log in
+using the user name and password above. After logging in, go to this
+url:
 
 http://localhost:8080/LanguageSetup?action=language_setup&target=English--all_pages.zip&language=English
 

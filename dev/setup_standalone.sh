@@ -2,6 +2,12 @@
 
 MOIN_VERSION=1.9.8
 
+if [[ $1 == '--clean' ]]; then
+    set -v
+    rm -r src/moin-${MOIN_VERSION} moin-env wiki wikiserver.py *.pyc
+    exit
+fi
+
 mkdir -p src
 wget -P src -N http://static.moinmo.in/files/moin-${MOIN_VERSION}.tar.gz
 tar -C src -xf src/moin-${MOIN_VERSION}.tar.gz
@@ -12,7 +18,7 @@ moin-env/bin/python -c 'import MoinMoin' 2> /dev/null || \
     moin-env/bin/pip install src/moin-${MOIN_VERSION}
 
 test -d wiki || cp -r src/moin-${MOIN_VERSION}/wiki .
-cp -r src/moin-${MOIN_VERSION}/wiki/wikiserver.py .
+cp -r src/moin-${MOIN_VERSION}/wikiserver.py .
 chmod +x wikiserver.py
 
 # create a user account:
