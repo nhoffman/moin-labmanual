@@ -2,3 +2,5 @@
 /dist/
 /moinlm.egg-info/
 /moinlm/data/ver
+/moin-env/
+/src/
