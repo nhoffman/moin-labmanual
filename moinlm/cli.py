@@ -8,6 +8,7 @@ import argparse
 import logging
 import sys
 import textwrap
+import zipfile
 
 from moinlm import __version__
 
@@ -25,18 +26,23 @@ class Subparser(object):
         self.add_arguments()
 
 
-class Nothing(Subparser):
+class Package(Subparser):
     """
-    Do nothing.
+    Create a package of pages.
 
     """
 
     def add_arguments(self):
         self.subparser.add_argument(
-            'infile', help="name of infile")
+            'pages_dir', default='pages', help="directory containing pages",
+            nargs='*')
+        self.subparser.add_argument(
+            '-z', '--zipfile', default='pages.zip',
+            help="name of output file (.zip)")
 
     def action(self, args):
-        print args
+        with zipfile.ZipFile(args.zipfile, 'w') as zf:
+            print zf
 
 
 class VersionAction(argparse._VersionAction):
@@ -69,7 +75,7 @@ def main(arguments=None):
         help='Print the version number and exit')
 
     subparsers = parser.add_subparsers()
-    Nothing(subparsers, name='nothing')
+    Package(subparsers, name='package')
 
     args = parser.parse_args(arguments)
 

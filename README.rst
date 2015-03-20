@@ -27,8 +27,10 @@ following actions:
   the MoinMoin package)
 * create a test user "testuser" with password "testpass"
 
-After executing the above script, start the standalone server::
+After executing the above script, activate the virtualenv and start
+the standalone server::
 
+  source moin-env/bin/activate
   ./wikiserver.py
 
 At this point you can open your browser and point it to
@@ -41,6 +43,6 @@ http://localhost:8080/LanguageSetup?action=language_setup&target=English--all_pa
 
 You should see the message "Attachment 'English--all_pages.zip' installed"
 
-Next, restart the server by interrupting the ``wikiserver.py`` script
+Finally, restart the server by interrupting the ``wikiserver.py`` script
 (press control+C), then starting it again. At this point the tabs
 ("RecentChanges", "FindPage") should have content.

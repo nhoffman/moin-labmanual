@@ -1,0 +1,37 @@
+{{{
+<<LMRecentChanges>>
+}}}
+
+<<LMRecentChanges>>
+
+{{{
+<<LMRecentChanges(some text)>>
+}}}
+
+<<LMRecentChanges(some text)>>
+
+{{{
+<<LMRecentChanges(some text with commas, semicolons; pipes | and other characters !@#$%^&*()_-)>>
+}}}
+
+<<LMRecentChanges(some text with commas, semicolons; pipes | and other characters !@#$%^&*()_-)>>
+
+{{{
+<<LMRecentChanges(some text
+with a line break)>>
+}}}
+
+<<LMRecentChanges(some text
+with a line break)>>
+
+{{{
+<<LMRecentChanges(some text with a link [[home]] and other '''wiki markup''')>>
+}}}
+
+<<LMRecentChanges(some text with a link [[home]] and other '''wiki markup''')>>
+
+{{{
+<<LMRecentChanges(some text containing <b>html<\b> markup)>>
+}}}
+
+<<LMRecentChanges(some text containing <b>html<\b> markup)>>

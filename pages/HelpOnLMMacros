@@ -1,0 +1,157 @@
+<<TableOfContents>>
+
+= Macro LMPageList =
+
+== Syntax ==
+
+{{{<<LMPageList(page,comment,interval,show,editors)>>}}}
+
+== Description ==
+
+LMPageList may be passed the following arguments (positionally or using keywords)
+
+ * page - (default "regex:.+") a pattern for matching page names. "-domain:system" is appended to exclude system pages.
+ * comment - (default None) a pattern used to match comments in the revision history of each page.
+ * interval - (default 365) Number of days after most revent revision or revision matching comment parameter that a page is considered "expired."
+ * show - (default "all") Values of "expired" or "uptodate" show on the the corresponding pages.
+ * editors - name of a group page containing a list of users 
+
+The "log" for a given page is the list of revisions displayed by the "info" link that the top of that page. This macro generates a table displaying a single log entry (i.e., one line) for each page in a set of pages matching the pattern provided using the '''page''' argument. The macro may be used to search for log entries containing a comment matching '''comment'''. If a page contains a matching log entry, the date falling '''interval''' days after the date of that revision will be displayed (the "due date"); due dates occurring before the current date are highlighted. 
+
+== Example ==
+
+The primary intended use of this macro is to track supervisor or director review of a set of pages. Thus an example of typical use could be
+
+{{{<<LMPageList(CH.PR.U.DXI F,review)>>}}}
+
+which would list all UWMC Chemistry protocols with titles starting with "F", show log entries containing the word "rename" and indicate due dates 6 months after the last revision with a matching comment. See below for the output of this example:
+
+<<LMPageList(CH.PR.U.DXI F,review)>>
+
+= Macro LMDraftWarning =
+
+== Syntax ==
+
+{{{<<LMDraftWarning(comment='',rev=None)>>}}}
+
+
+== Description ==
+
+This macro provides a mechanism for indicating that the current version of a page is a "draft." 
+
+Arguments:
+ * comment: optional comment text 
+ * rev: optional revision number for this document to which the reader should refer. 
+
+== Examples ==
+
+{{{<<LMDraftWarning>>}}}
+<<LMDraftWarning>>
+
+{{{<<LMDraftWarning()>>}}}
+<<LMDraftWarning()>>
+
+{{{<<LMDraftWarning(rev=2)>>}}}
+<<LMDraftWarning(rev=2)>>
+
+{{{<<LMDraftWarning(2)>>}}}
+<<LMDraftWarning(2)>>
+
+{{{<<LMDraftWarning(ready for review)>>}}}
+<<LMDraftWarning(ready for review)>>
+
+{{{<<LMDraftWarning(comment=ready for review)>>}}}
+<<LMDraftWarning(comment=ready for review)>>
+
+{{{<<LMDraftWarning(ready for review,2)>>}}}
+<<LMDraftWarning(ready for review,2)>>
+
+{{{<<LMDraftWarning(comment=ready for review,rev=2)>>}}}
+<<LMDraftWarning(comment=ready for review,rev=2)>>
+
+{{{<<LMDraftWarning(comment=ready for review,rev=99)>>}}}
+<<LMDraftWarning(comment=ready for review,rev=99)>>
+
+{{{<<LMDraftWarning(comment=ready for review,rev=foo)>>}}}
+<<LMDraftWarning(comment=ready for review,rev=foo)>>
+= Macro LMWarningBox =
+
+== Syntax ==
+
+{{{<<LMWarningBox(text)>>}}}
+
+== Description ==
+
+Places the provided text in an obtrusive box.
+
+== Examples ==
+
+{{{<<LMWarningBox(Be aware of something.)>>}}}
+
+<<LMWarningBox(Be aware of something.)>>
+
+= Macro LMRecentChanges =
+
+== Syntax ==
+
+{{{<<LMRecentChanges(text)>>}}}
+
+== Description ==
+
+Macro that highlights enclosed text. Commas, semicolons, and other special characters are ok; wiki markup and html are not formatted.
+
+== Examples ==
+
+{{{
+This is old text. <<LMRecentChanges(This text has changed!)>> This is old text.
+}}}
+
+This is old text. <<LMRecentChanges(This text has changed!)>> This is old text.
+
+= Macro LMTableOfContents =
+
+== Syntax ==
+
+{{{<<LMTableOfContents>>}}}
+
+== Description ==
+
+Same behavior as !TableOfContents, but provides a different symbol for each section level (symbols are defined down to level 5). Requires the bplus_lm theme (otherwise the appearance will be the same at !TableOfContents). Symbols (defined as css styles) used are standard for outlines: 
+
+ 1. upper-roman
+ 1. upper-alpha
+ 1. decimal
+ 1. lower-alpha
+ 1. lower-roman
+
+=== level 3 section ===
+
+==== level 4 section ====
+
+===== level 5 section =====
+
+====== level 6 section ======
+
+== Examples ==
+
+<<LMTableOfContents>>
+
+
+
+= Macro LMOnlineTestGuide =
+
+== Syntax ==
+
+{{{<<LMOnlineTestGuide(mnemonic)>>}}}
+
+== Description ==
+
+Creates a link to the entry for the specific test indicated by ''mnemonic''
+
+== Examples ==
+
+{{{
+Please see the OLTG entry for <<LMOnlineTestGuide(PTT)>>
+}}}
+
+Please see the OLTG entry for <<LMOnlineTestGuide(PTT)>>
