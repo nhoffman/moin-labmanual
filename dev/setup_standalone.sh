@@ -4,7 +4,7 @@ MOIN_VERSION=1.9.8
 
 if [[ $1 == '--clean' ]]; then
     set -v
-    rm -r src/moin-${MOIN_VERSION} moin-env wiki wikiserver.py *.pyc
+    rm -rf src/moin-${MOIN_VERSION} moin-env wiki wikiserver.py *.pyc pages.zip
     exit
 fi
 
@@ -33,4 +33,6 @@ moin-env/bin/moin \
     --password=testpass \
     --email=testuser@nowhere.com
 
+# create pages.zip for installation to the wiki
+./moinlm.py package
 

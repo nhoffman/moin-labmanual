@@ -47,6 +47,15 @@ class LocalConfig(multiconfig.DefaultConfig):
     # Add your configuration items here.
     secrets = 'This string is NOT a secret, please make up your own, long, random secret string!'
 
+    navi_bar = [
+        # If you want to show your page_front_page here:
+        #u'%(page_front_page)s',
+        u'RecentChanges',
+        u'FindPage',
+        u'HelpContents',
+        u'HelpOnLMMacros',
+    ]
+
 # DEVELOPERS! Do not add your configuration items there,
 # you could accidentally commit them! Instead, create a
 # wikiconfig_local.py file containing this:

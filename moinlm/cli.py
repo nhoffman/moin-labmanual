@@ -9,6 +9,8 @@ import logging
 import sys
 import textwrap
 import zipfile
+import glob
+from os import path
 
 from moinlm import __version__
 
@@ -41,8 +43,14 @@ class Package(Subparser):
             help="name of output file (.zip)")
 
     def action(self, args):
+        pages = path.join(args.pages_dir, '*')
+        lines = ['MoinMoinPackage|1']
         with zipfile.ZipFile(args.zipfile, 'w') as zf:
-            print zf
+            for i, fn in enumerate(glob.glob(pages), start=1):
+                num = '{}'.format(i)
+                zf.write(fn, num)
+                lines.append('|'.join(['ReplaceUnderlay', num, path.basename(fn)]))
+            zf.writestr('MOIN_PACKAGE', '\n'.join(lines))
 
 
 class VersionAction(argparse._VersionAction):
