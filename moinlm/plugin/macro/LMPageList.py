@@ -17,7 +17,8 @@
       names. "-domain:system" is appended to exclude system pages.
     * comment - (default None) a pattern used to match comments in the revision
       history of each page.
-    * interval - (default 365) Number of days after most revent revision or revision matching
+    * interval - (default 365) Number of days after most revent
+      revision or revision matching
       comment parameter that a page is considered "expired."
     * show - (default "all") Values of "expired" or "uptodate" show on the the
       corresponding pages.
@@ -29,18 +30,14 @@
 
 import sys
 import re
-import time
 import datetime
 import pprint
 
 from MoinMoin import search, wikiutil
 from MoinMoin.logfile import editlog
-from MoinMoin.Page import Page
 from MoinMoin.user import User
 from MoinMoin.util.dataset import TupleDataset, Column
 from MoinMoin.widget.browser import DataBrowserWidget
-
-__version__ = "$Rev: 3322 $"
 
 Dependencies = ["time"]
 
@@ -52,6 +49,7 @@ green_bg = '<span style="background: green">%s</span>'
 ok = '<span style="background: #33FF00">%s</span>'
 flagged = '<span style="background: red; color: white">%s</span>'
 highlight = '<span style="font-weight:bold; text-decoration:underline">%s</span>'
+
 
 class Row(object):
 
@@ -76,10 +74,10 @@ class Row(object):
         self.expired = False
 
         # restrict to a subset of revision actions
-        ok_actions = set(['SAVE','SAVENEW','SAVE/REVERT','SAVE/RENAME'])
+        ok_actions = set(['SAVE', 'SAVENEW', 'SAVE/REVERT', 'SAVE/RENAME'])
         lines = [line for line in log.reverse() if line.action in ok_actions]
 
-        username = lambda x: User(request,id=x.userid).name
+        username = lambda x: User(request, id=x.userid).name
 
         if not lines:
             # self.comment = [username(line) for line in lines]
@@ -137,15 +135,17 @@ class Row(object):
         if log_rexp:
             if has_match:
                 # highlight matching substring
-                comment = log_re.subn(lambda mo: highlight%mo.group(0), comment)[0]
+                comment = log_re.subn(lambda mo: highlight % mo.group(0), comment)[0]
+
                 if self.expired:
                     self.comment = flagged % comment
                 else:
                     self.comment = ok % comment
             else:
-              self.comment = grey % line.comment
+                self.comment = grey % line.comment
         else:
             self.comment = line.comment
+
 
 def do_search(macro, page_rexp, log_rexp, interval, show, groupPage=None):
 
@@ -156,7 +156,7 @@ def do_search(macro, page_rexp, log_rexp, interval, show, groupPage=None):
     # results contains output of the Search.run() method
     # (an instance of the SearchResults class)
     results = search.searchPages(macro.request, page_rexp,
-            titlesearch=1, case=case, sort='page_name')
+                                 titlesearch=1, case=case, sort='page_name')
     hits = list(results.hits)
 
     if groupPage:
@@ -171,7 +171,8 @@ def do_search(macro, page_rexp, log_rexp, interval, show, groupPage=None):
             Column('rev', label='rev', align='right'),
             Column('mdate', label=_('Date', formatted=False), align='right'),
             Column('elapsed', label=_('Elapsed', formatted=False), align='right'),
-            Column('editor', label=_('Editor', formatted=False), hidden=not request.cfg.show_names),
+            Column('editor', label=_('Editor', formatted=False),
+                   hidden=not request.cfg.show_names),
             Column('comment', label=_('Comment', formatted=False)),
             Column('action', label=_('Action', formatted=False)),
             ]
@@ -188,26 +189,26 @@ def do_search(macro, page_rexp, log_rexp, interval, show, groupPage=None):
                       log_rexp, interval, editors)
 
             # exclude pages according to show parameter
-            if (show == 'expired' and not row.expired) or (show == 'uptodate' and row.expired):
+            if (show == 'expired' and not row.expired) or \
+               (show == 'uptodate' and row.expired):
                 continue
 
-            history.addRow(
-                (
-                page.link_to(request), # pagename
-                row.rev, # rev
-                row.mdate, # mdate
+            history.addRow((
+                page.link_to(request),  # pagename
+                row.rev,  # rev
+                row.mdate,  # mdate
                 row.elapsed,
-                row.editor, # editor
-                row.comment, # comment
-                page.link_to(request, querystr='action=info', text='info') # action
-                )
-            )
+                row.editor,  # editor
+                row.comment,  # comment
+                page.link_to(request, querystr='action=info', text='info')  # action
+                ))
 
         history_table = DataBrowserWidget(request)
         history_table.setData(history)
         return history_table.render()
     else:
         return ''
+
 
 def execute(self, argstr=''):
 
@@ -217,44 +218,44 @@ def execute(self, argstr=''):
     request = self.request
     _ = self._
 
-
     def format_err(msg):
         style = """color:red; border-style:dotted; padding:0.5em;
             background-color:#FFCCCC; width:75%; display:block"""
 
         return request.formatter.text(
-            ('Error in <<LMPageList(%s)>> '%argstr) + msg,
+            ('Error in <<LMPageList(%s)>> ' % argstr) + msg,
             style=style)
 
     try:
         defaults = (
-            ('page','regex:.+'),
-            ('comment',None),
-            ('interval',365),
-            ('show','all'),
-            ('editors',None))
+            ('page', 'regex:.+'),
+            ('comment', None),
+            ('interval', 365),
+            ('show', 'all'),
+            ('editors', None))
         keys = [x[0] for x in defaults]
 
         args = dict(defaults)
         positional, kwargs, trailing = wikiutil.parse_quoted_separated(argstr or u'')
 
-        args.update(dict((k,v) for k,v in zip(keys,positional) if v))
+        args.update(dict((k, v) for k, v in zip(keys, positional) if v))
         args.update(kwargs)
 
         page_rexp = args['page'] + ' -domain:system'
         log_rexp = args['comment'] or None
 
         # With whitespace argument, return same error message as FullSearch
-
         if page_rexp.isspace():
-            return format_err('Please use a more selective search term instead of {{{"%s"}}}',
-                              page_rexp)
+            return format_err(
+                'Please use a more selective search term instead of {{{"%s"}}}',
+                page_rexp)
 
         show = args['show']
-        showvals = ['all','expired','uptodate']
+        showvals = ['all', 'expired', 'uptodate']
         if show not in showvals:
-            return format_err('The argument "show" must have one of the following values: %s' % \
-                                  ', '.join(showvals))
+            return format_err(
+                'The argument "show" must have one of the following values: %s' %
+                ', '.join(showvals))
 
         groupPageName = args['editors']
         if groupPageName:
@@ -263,7 +264,8 @@ def execute(self, argstr=''):
                                          titlesearch=1, case=1, sort='page_name')
             hits = list(results.hits)
             if not hits:
-                return format_err('"editors" must be provided the name of an existing group page')
+                return format_err(
+                    '"editors" must be provided the name of an existing group page')
             groupPage = hits[0].page
         else:
             groupPage = None
@@ -295,7 +297,8 @@ def execute(self, argstr=''):
         output += ['<ol>']
         if html:
             if page_rexp.startswith('regex:.+ '):
-                output.append("""<li>Pages are shown without restriction on page name.</li>""")
+                output.append(
+                    """<li>Pages are shown without restriction on page name.</li>""")
             else:
                 output.append("""<li>Pages below match the search term
                 "<b>%(page)s</b>"</li>""" % args)
@@ -315,9 +318,11 @@ def execute(self, argstr=''):
             recent revision in parentheses).</li>
             """)
             else:
-                output.append('<li>The most recent log entry for each page is shown.</li>')
+                output.append(
+                    '<li>The most recent log entry for each page is shown.</li>')
 
-            output.append('<li>Elapsed time since the displayed revision is shown in days.</li>')
+            output.append(
+                '<li>Elapsed time since the displayed revision is shown in days.</li>')
 
             if interval > 0:
                 output.append(
@@ -333,7 +338,6 @@ def execute(self, argstr=''):
         else:
             output.append('LMPageList: No pages match the search term provided.</p>')
 
-        output.append(grey % ('(LMPageList version %s)' % _(__version__)))
         return '\n'.join(output)
 
     except:
@@ -349,6 +353,3 @@ def groupMembers(groupPage):
     members = set(x.split()[-1] for x in pageStr.splitlines() if x.startswith(' * '))
 
     return members
-
-
-
