@@ -9,12 +9,9 @@
     @license: UW Free Fork
 """
 
-import os
-import re
 import time
-import sys
-from MoinMoin import config, wikiutil
 from MoinMoin.Page import Page
+
 
 def execute(pagename, request):
     _ = request.getText
@@ -23,10 +20,12 @@ def execute(pagename, request):
         request.theme.add_msg(_('You are not allowed to edit this page.'), "error")
         Page(request, pagename).send_page()
         return
-    
-    comment = request.form.get('statement', [''])[0] + ' ' + wikiutil.clean_input(request.form.get('comment', [''])[0])
-    comment = comment.strip()
-    
+
+    comment = ' '.join([
+        request.form.get('statement', ''),
+        request.form.get('comment', ''),
+    ]).strip()
+
     if comment:
         from MoinMoin.PageEditor import PageEditor
         page = Page(request, pagename)
@@ -40,8 +39,8 @@ user: %(user)s
 </pre>""" % locals()
 
         # save original page content with a comment
-        savetext =  ('## reviewed/signed by %s %s \n' % (user, time.asctime())) + \
-            page.get_raw_body().rstrip()
+        savetext = '## reviewed/signed by %s %s \n' % (user, time.asctime())
+        savetext += page.get_raw_body().rstrip()
         rev = request.rev or 0
         try:
             pg.saveText(savetext, rev, trivial=False, comment=comment)
@@ -78,7 +77,8 @@ user: %(user)s
     recorded in the revision history (view comments in the revision
     history using the "info" link below).</li>
 
-    <li>Your name and the date/time will be recorded automatically - you do not need to enter them here.</li>
+    <li>Your name and the date/time will be recorded automatically -
+    you do not need to enter them here.</li>
 
     </ul>
     </form>
@@ -86,4 +86,3 @@ user: %(user)s
 
     request.theme.add_msg(msg)
     Page(request, pagename).send_page()
-
