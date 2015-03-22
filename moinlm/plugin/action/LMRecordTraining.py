@@ -9,12 +9,10 @@
     @license: UW Free Fork
 """
 
-import os, re
-from MoinMoin import config, wikiutil
 from MoinMoin.Page import Page
 
+
 def execute(pagename, request):
-    _ = request.getText
 
     msg = """
     <form method="post" action="">
@@ -37,4 +35,3 @@ def execute(pagename, request):
 
     request.theme.add_msg(msg)
     Page(request, pagename).send_page()
-

@@ -9,8 +9,6 @@
     @license: UW Free Fork
 """
 
-import os, re
-from MoinMoin import config, wikiutil
 from MoinMoin.Page import Page
 from MoinMoin.PageEditor import PageEditor
 from MoinMoin.util import timefuncs
@@ -18,6 +16,7 @@ from MoinMoin.util import timefuncs
 traininglog_fields = 'pagename rev user timestamp'.split()
 traininglog_delim = ';'
 traininglog_name = u"TrainingLog"
+
 
 def read_training_log(request, pagename=None):
     logpage = Page(request, traininglog_name)
@@ -33,14 +32,15 @@ def read_training_log(request, pagename=None):
         elif d.get('pagename') == pagename:
             yield d
 
+
 def record_training(request, page_info):
     editor = PageEditor(request, traininglog_name, do_revision_backup=0)
     raw_body = editor.get_raw_body_str()
 
     new_line = traininglog_delim.join(page_info[f] for f in traininglog_fields)
 
-    editor.saveText(newtext=raw_body.strip() + '\n' + new_line,
-        rev=0)
+    editor.saveText(newtext=raw_body.strip() + '\n' + new_line, rev=0)
+
 
 def execute(pagename, request):
 
@@ -49,7 +49,7 @@ def execute(pagename, request):
     user = request.user
 
     page_info = page.lastEditInfo()
-    page_info['rev'] = `page.get_real_rev()`
+    page_info['rev'] = repr(page.get_real_rev())
     page_info['user'] = user.name
     page_info['pagename'] = pagename
     page_info['timestamp'] = timefuncs.W3CDate()
@@ -62,4 +62,3 @@ def execute(pagename, request):
 
     msg = _(msg_text, formatted=False)
     page.send_page(msg=msg)
-
