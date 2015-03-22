@@ -14,19 +14,19 @@ LMPageList may be passed the following arguments (positionally or using keywords
  * comment - (default None) a pattern used to match comments in the revision history of each page.
  * interval - (default 365) Number of days after most revent revision or revision matching comment parameter that a page is considered "expired."
  * show - (default "all") Values of "expired" or "uptodate" show on the the corresponding pages.
- * editors - name of a group page containing a list of users 
+ * editors - name of a group page containing a list of users
 
-The "log" for a given page is the list of revisions displayed by the "info" link that the top of that page. This macro generates a table displaying a single log entry (i.e., one line) for each page in a set of pages matching the pattern provided using the '''page''' argument. The macro may be used to search for log entries containing a comment matching '''comment'''. If a page contains a matching log entry, the date falling '''interval''' days after the date of that revision will be displayed (the "due date"); due dates occurring before the current date are highlighted. 
+The "log" for a given page is the list of revisions displayed by the "info" link that the top of that page. This macro generates a table displaying a single log entry (i.e., one line) for each page in a set of pages matching the pattern provided using the '''page''' argument. The macro may be used to search for log entries containing a comment matching '''comment'''. If a page contains a matching log entry, the date falling '''interval''' days after the date of that revision will be displayed (the "due date"); due dates occurring before the current date are highlighted.
 
 == Example ==
 
 The primary intended use of this macro is to track supervisor or director review of a set of pages. Thus an example of typical use could be
 
-{{{<<LMPageList(CH.PR.U.DXI F,review)>>}}}
+{{{<<LMPageList(TestLM)>>}}}
 
 which would list all UWMC Chemistry protocols with titles starting with "F", show log entries containing the word "rename" and indicate due dates 6 months after the last revision with a matching comment. See below for the output of this example:
 
-<<LMPageList(CH.PR.U.DXI F,review)>>
+<<LMPageList(TestLM)>>
 
 = Macro LMDraftWarning =
 
@@ -37,11 +37,11 @@ which would list all UWMC Chemistry protocols with titles starting with "F", sho
 
 == Description ==
 
-This macro provides a mechanism for indicating that the current version of a page is a "draft." 
+This macro provides a mechanism for indicating that the current version of a page is a "draft."
 
 Arguments:
- * comment: optional comment text 
- * rev: optional revision number for this document to which the reader should refer. 
+ * comment: optional comment text
+ * rev: optional revision number for this document to which the reader should refer.
 
 == Examples ==
 
@@ -116,7 +116,32 @@ This is old text. <<LMRecentChanges(This text has changed!)>> This is old text.
 
 == Description ==
 
-Same behavior as !TableOfContents, but provides a different symbol for each section level (symbols are defined down to level 5). Requires the bplus_lm theme (otherwise the appearance will be the same at !TableOfContents). Symbols (defined as css styles) used are standard for outlines: 
+Same behavior as !TableOfContents, but provides a different symbol for each section level (symbols are defined down to level 5). Requires the following CSS (otherwise the appearance will be the same at !TableOfContents):
+
+{{{
+    /* Define numbering style for each level */
+    ol.toc-level-1 {
+        list-style-type: upper-roman;
+    }
+
+    ol.toc-level-2 {
+        list-style-type: upper-alpha;
+    }
+
+    ol.toc-level-3 {
+        list-style-type: decimal;
+    }
+
+    ol.toc-level-4 {
+        list-style-type: lower-alpha;
+    }
+
+    ol.toc-level-5 {
+        list-style-type: lower-roman;
+    }
+}}}
+
+Symbols (defined as css styles) used are standard for outlines:
 
  1. upper-roman
  1. upper-alpha
@@ -136,8 +161,6 @@ Same behavior as !TableOfContents, but provides a different symbol for each sect
 
 <<LMTableOfContents>>
 
-
-
 = Macro LMOnlineTestGuide =
 
 == Syntax ==
@@ -155,3 +178,7 @@ Please see the OLTG entry for <<LMOnlineTestGuide(PTT)>>
 }}}
 
 Please see the OLTG entry for <<LMOnlineTestGuide(PTT)>>
+
+= Test Pages =
+
+<<PageList(TestLM)>>

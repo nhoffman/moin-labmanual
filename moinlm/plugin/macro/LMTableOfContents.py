@@ -1,6 +1,30 @@
 # -*- coding: iso-8859-1 -*-
-"""
-    MoinMoin - TableOfContents Macro
+"""Derived from MoinMoin - TableOfContents Macro
+
+    Differs from TableOfContents only in that each <li> element in the
+    TOC is in the class 'toc-level-%s', allowing the formatting of the
+    level to be defined in the CSS stylesheet, for example:
+
+    /* Define numbering style for each level */
+    ol.toc-level-1 {
+        list-style-type: upper-roman;
+    }
+
+    ol.toc-level-2 {
+        list-style-type: upper-alpha;
+    }
+
+    ol.toc-level-3 {
+        list-style-type: decimal;
+    }
+
+    ol.toc-level-4 {
+        list-style-type: lower-alpha;
+    }
+
+    ol.toc-level-5 {
+        list-style-type: lower-roman;
+    }
 
     The macro works as follows: First, it renders the page using
     the TOCFormatter (below) to get access to the outline of the
@@ -23,6 +47,7 @@
 
     @copyright: 2007 MoinMoin:JohannesBerg
     @license: GNU GPL, see COPYING for details.
+
 """
 
 from MoinMoin.formatter import FormatterBase
@@ -31,6 +56,7 @@ from MoinMoin import wikiutil
 
 # cannot be cached because of TOCs in included pages
 Dependencies = ['time']
+
 
 class TOCFormatter(FormatterBase):
     def __init__(self, request, **kw):
@@ -45,18 +71,18 @@ class TOCFormatter(FormatterBase):
 
     def startContent(self, *args, **kw):
         res = FormatterBase.startContent(self, *args, **kw)
-        self.collected_headings.append([1, self.request.include_id, None])
+        self.collected_headings.append([1, self.request.uid_generator.include_id, None])
         return res
 
     def endContent(self):
         res = FormatterBase.endContent(self)
-        self.collected_headings.append([0, self.request.include_id, None])
+        self.collected_headings.append([0, self.request.uid_generator.include_id, None])
         return res
 
     def heading(self, on, depth, **kw):
         id = kw.get('id', None)
         self.in_heading = on
-        if not id is None:
+        if id is not None:
             id = self.request._tocfm_orig_formatter.make_id_unique(id)
         if on:
             self.collected_headings.append([depth, id, u''])
@@ -130,6 +156,7 @@ class TOCFormatter(FormatterBase):
     comment = _anything_return_empty
     transclusion = _anything_return_empty
 
+
 def macro_LMTableOfContents(macro, maxdepth=int):
     """
 Prints a table of contents.
@@ -146,7 +173,7 @@ Prints a table of contents.
 
     pname = macro.formatter.page.page_name
 
-    macro.request.push_unique_ids()
+    macro.request.uid_generator.push()
 
     macro.request._tocfm_collected_headings = []
     macro.request._tocfm_orig_formatter = macro.formatter
@@ -156,7 +183,8 @@ Prints a table of contents.
 
     # this is so we get a correctly updated TOC if we just preview in the editor -
     # the new content is not stored on disk yet, but available as macro.parser.raw:
-    p.set_raw_body(macro.parser.raw, modified=1)
+    format = '#format %s\n' % p.pi['format']
+    p.set_raw_body(format + macro.parser.raw, modified=1)
 
     output = macro.request.redirectedOutput(p.send_page,
                                             content_only=True,
@@ -171,7 +199,6 @@ Prints a table of contents.
         macro.formatter.text(_('Contents')),
         macro.formatter.paragraph(0),
     ]
-
 
     # find smallest used level and use that as the outer-most indentation,
     # to fix pages like HelpOnMacros that only use h2 and lower levels.
@@ -196,7 +223,7 @@ Prints a table of contents.
             continue
 
         # will be reset by pop_unique_ids below
-        macro.request.include_id = incl_id
+        macro.request.uid_generator.include_id = incl_id
 
         need_li = lastlvl >= lvl
         while lastlvl > lvl:
@@ -207,7 +234,7 @@ Prints a table of contents.
             lastlvl -= 1
         while lastlvl < lvl:
             result.extend([
-                macro.formatter.number_list(1, **{'class':'toc-level-%s'%lvl}),
+                macro.formatter.number_list(1, **{'class': 'toc-level-%s' % lvl}),
                 macro.formatter.listitem(1),
             ])
             lastlvl += 1
@@ -228,8 +255,7 @@ Prints a table of contents.
         result.append(macro.formatter.number_list(0))
         lastlvl -= 1
 
-    macro.request.pop_unique_ids()
+    macro.request.uid_generator.pop()
 
     result.append(macro.formatter.div(0))
     return ''.join(result)
-
