@@ -18,19 +18,14 @@ def execute(pagename, request):
     <form method="post" action="">
     <input type="hidden" name="action" value="lmWriteTrainingLog">
     <input type="submit" name="button" value="I have read this page">
+    </form>
 
     <ul>
-
     <li>This action is intended to document that this page has been
     read and understood.</li>
-
     <li>Please press this button to document that you have read this
     page or click "Clear message" below to cancel.</li>
-
     </ul>
-
-
-    </form>
     """
 
     request.theme.add_msg(msg)

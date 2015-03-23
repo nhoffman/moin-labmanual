@@ -36,9 +36,7 @@ def read_training_log(request, pagename=None):
 def record_training(request, page_info):
     editor = PageEditor(request, traininglog_name, do_revision_backup=0)
     raw_body = editor.get_raw_body_str()
-
     new_line = traininglog_delim.join(page_info[f] for f in traininglog_fields)
-
     editor.saveText(newtext=raw_body.strip() + '\n' + new_line, rev=0)
 
 
@@ -61,4 +59,6 @@ def execute(pagename, request):
     """ % page_info
 
     msg = _(msg_text, formatted=False)
-    page.send_page(msg=msg)
+
+    request.theme.add_msg(msg)
+    page.send_page()
