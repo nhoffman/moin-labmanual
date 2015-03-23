@@ -9,20 +9,16 @@
     @license: UW Free Fork
 """
 
-import os, re
-from MoinMoin import config, wikiutil
 from MoinMoin.Page import Page
-from MoinMoin.util import timefuncs
 from MoinMoin.util.dataset import TupleDataset, Column
 from MoinMoin.widget.browser import DataBrowserWidget
-from MoinMoin.widget import html
 
-from lmWriteTrainingLog import read_training_log, traininglog_fields
+from moinlm.training import read_training_log, traininglog_fields
+
 
 def execute(pagename, request):
 
     _ = request.getText
-    user = request.user
 
     loglines = list(read_training_log(request, pagename))
 
@@ -43,6 +39,4 @@ def execute(pagename, request):
     else:
         request.theme.add_msg(_('No training records for this page'))
 
-
     Page(request, pagename).send_page()
-
