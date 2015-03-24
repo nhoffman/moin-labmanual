@@ -17,8 +17,11 @@ Running in standalone mode
 built-in webserver) is a good way to evaluate and develop these plugin
 modules. Here's a step-by-step guide.
 
-Execute the setup script ``dev/setup_standalone.sh`` to perform the
-following actions:
+First, execute this script from within the project repository::
+
+  dev/setup_standalone.sh
+
+This script will perform the following actions:
 
 * download and unpack the MoinMoin tarball to ``./src/``
 * create a virtualenv ``./moin-env``
@@ -26,6 +29,8 @@ following actions:
 * create ``./wiki`` containing data for the wiki instance (copied from
   the MoinMoin package)
 * create a test user "testuser" with password "testpass"
+* create a MoinMoin "package" ``pages.zip`` attached to the page
+  "LanguageSetup" for installation.
 
 After executing the above script, activate the virtualenv and start
 the standalone server::
@@ -36,13 +41,20 @@ the standalone server::
 At this point you can open your browser and point it to
 http://localhost:8080 - but there isn't much to see until we install
 the "underlay", containing system and help pages. To do so, log in
-using the user name and password above. After logging in, go to this
-url:
+using the user name "testuser" and password "testpass". After logging
+in, visit the following url in your browser:
 
 http://localhost:8080/LanguageSetup?action=language_setup&target=English--all_pages.zip&language=English
 
 You should see the message "Attachment 'English--all_pages.zip' installed"
 
-Finally, restart the server by interrupting the ``wikiserver.py`` script
-(press control+C), then starting it again. At this point the tabs
-("RecentChanges", "FindPage") should have content.
+Next, install the underlay pages for this project by visiting
+http://localhost:8080/LanguageSetup?action=AttachFile and finding the
+entry for '000-moin-labmanual.zip' (should be the first line on the
+page), and clicking on "install".
+
+Finally, restart the server by interrupting the ``wikiserver.py``
+script (press control+C), then starting it again. At this point the
+tabs ("RecentChanges", "FindPage", etc) should have content. The front
+page of the wiki should now be "HelpOnLMMacros", which provides
+documentation for macros provided in this package.

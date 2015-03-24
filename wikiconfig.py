@@ -42,18 +42,18 @@ class LocalConfig(multiconfig.DefaultConfig):
     logo_string = u'<img src="%s/common/moinmoin.png" alt="MoinMoin Logo">' % url_prefix_static
     # ^^^ DON'T TOUCH THIS EXCEPT IF YOU KNOW WHAT YOU DO ^^^
 
-    #page_front_page = u'FrontPage' # change to some better value
+    page_front_page = u'HelpOnLMMacros' # change to some better value
 
     # Add your configuration items here.
     secrets = 'This string is NOT a secret, please make up your own, long, random secret string!'
 
     navi_bar = [
         # If you want to show your page_front_page here:
-        #u'%(page_front_page)s',
+        # u'%(page_front_page)s',
+        u'HelpOnLMMacros',
         u'RecentChanges',
         u'FindPage',
         u'HelpContents',
-        u'HelpOnLMMacros',
     ]
 
 # DEVELOPERS! Do not add your configuration items there,

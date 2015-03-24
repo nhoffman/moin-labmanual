@@ -18,13 +18,15 @@ moin-env/bin/python -c 'import MoinMoin' 2> /dev/null || \
     moin-env/bin/pip install src/moin-${MOIN_VERSION}
 
 test -d wiki || cp -r src/moin-${MOIN_VERSION}/wiki .
-cp -r src/moin-${MOIN_VERSION}/wikiserver.py .
+ln -sf src/moin-${MOIN_VERSION}/wikiserver.py .
 chmod +x wikiserver.py
+
+# create pages.zip for installation to the wiki
+./moinlm.py package -z wiki/underlay/pages/LanguageSetup/attachments/000-moin-labmanual.zip
 
 # create a user account:
 # username: testuser
 # password: testpass
-
 moin-env/bin/moin \
     --config-dir=$(pwd) \
     --wiki-url=http://localhost \
@@ -33,6 +35,5 @@ moin-env/bin/moin \
     --password=testpass \
     --email=testuser@nowhere.com
 
-# create pages.zip for installation to the wiki
-./moinlm.py package
+
 
