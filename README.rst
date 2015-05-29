@@ -58,3 +58,10 @@ script (press control+C), then starting it again. At this point the
 tabs ("RecentChanges", "FindPage", etc) should have content. The front
 page of the wiki should now be "HelpOnLMMacros", which provides
 documentation for macros provided in this package.
+
+As configured above, the code in the ``moinlm`` package is imported
+directly by ``wikiserver.py`` (ie, the package does not need to be
+installed to the virtualenv), but changes to the code won't be
+registered until the server is restarted. During development, it's
+convenient to use ``run_standalone.py`` to launch the server: use
+Ctrl-C to restart after code updates.
