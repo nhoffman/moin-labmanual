@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 MOIN_VERSION=1.9.8
 
 if [[ $1 == '--clean' ]]; then
@@ -9,8 +11,10 @@ if [[ $1 == '--clean' ]]; then
 fi
 
 mkdir -p src
-wget -P src -N http://static.moinmo.in/files/moin-${MOIN_VERSION}.tar.gz
-tar -C src -xf src/moin-${MOIN_VERSION}.tar.gz
+moin_src=moin-${MOIN_VERSION}.tar.gz
+test -f src/$moin_src || \
+    wget -P src -N http://static.moinmo.in/files/$moin_src
+tar -C src -xf src/$moin_src
 
 test -d moin-env || virtualenv moin-env
 
@@ -22,7 +26,9 @@ ln -sf src/moin-${MOIN_VERSION}/wikiserver.py .
 chmod +x wikiserver.py
 
 # create pages.zip for installation to the wiki
-./moinlm.py package -z wiki/underlay/pages/LanguageSetup/attachments/000-moin-labmanual.zip
+./moinlm.py \
+    package pages \
+    -z wiki/underlay/pages/LanguageSetup/attachments/000-moin-labmanual.zip
 
 # create a user account:
 # username: testuser

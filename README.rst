@@ -10,6 +10,11 @@ Dependencies
 * Python 2.7
 * MoinMoin 1.9.8 (http://moinmo.in/)
 
+Features
+========
+
+
+
 Running in standalone mode
 ==========================
 
@@ -44,14 +49,16 @@ the "underlay", containing system and help pages. To do so, log in
 using the user name "testuser" and password "testpass". After logging
 in, visit the following url in your browser:
 
-http://localhost:8080/LanguageSetup?action=language_setup&target=English--all_pages.zip&language=English
+http://localhost:8080/LanguageSetup?action=language_setup&target=English--all_pages.zip
 
 You should see the message "Attachment 'English--all_pages.zip' installed"
 
-Next, install the underlay pages for this project by visiting
-http://localhost:8080/LanguageSetup?action=AttachFile and finding the
-entry for '000-moin-labmanual.zip' (should be the first line on the
-page), and clicking on "install".
+Next, install the underlay pages for this project. Visit this url:
+
+http://localhost:8080/LanguageSetup?action=AttachFile
+
+and find the entry for '000-moin-labmanual.zip' (should be the first line
+on the page), and click on "install".
 
 Finally, restart the server by interrupting the ``wikiserver.py``
 script (press control+C), then starting it again. At this point the
@@ -63,5 +70,6 @@ As configured above, the code in the ``moinlm`` package is imported
 directly by ``wikiserver.py`` (ie, the package does not need to be
 installed to the virtualenv), but changes to the code won't be
 registered until the server is restarted. During development, it's
-convenient to use ``run_standalone.py`` to launch the server: use
-Ctrl-C to restart after code updates.
+convenient to use ``dev/run_standalone.py`` to launch the server. This
+is simply a wrapper that runs ``wikiserver.py`` and will perform a
+restart after Ctrl-C.

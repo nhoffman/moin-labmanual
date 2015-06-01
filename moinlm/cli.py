@@ -10,11 +10,13 @@ import sys
 import textwrap
 import zipfile
 import glob
+import csv
+from itertools import chain, groupby, count
 from os import path
 
 from moinlm import __version__
 
-log = logging
+log = logging.getLogger(__name__)
 
 
 class Subparser(object):
@@ -29,10 +31,36 @@ class Subparser(object):
 
 
 class Package(Subparser):
-    """
-    Create a package of pages.
+    """Create a package of pages.
 
+    Each directory in ``pages_dir`` should contain wiki pages as plain
+    text files. Each file may end with an optional revision number
+    (eg, PageName.1). Multiple revisions of a page may be provided by
+    naming files PageName.1, PageName.2, etc. An author name and
+    revision comment may be provided for each revision in a file
+    ending with '.revisions' (eg PageName.revisions) in the format
+    'revision|author|comment'.
+
+    See HelpOnPackageInstaller
     """
+
+    def page_group(self, grp):
+        """Given an iterable of page names, returns (pages, data), where pages
+        is a list of filenames in grp not ending with '.revisions',
+        and data is a dict in the format {revision: (author, comment)}
+        if a file ending with '.revisions' exists, else {}.
+
+        """
+        grp = list(grp)
+        revs = [grp.pop(i) for i, f in enumerate(grp) if f.endswith('.revisions')]
+        if revs:
+            with open(revs[0]) as f:
+                # revision|author|comment
+                data = {r: (a, c) for r, a, c in csv.reader(f, delimiter='|')}
+        else:
+            data = {}
+
+        return grp, data
 
     def add_arguments(self):
         self.subparser.add_argument(
@@ -40,16 +68,52 @@ class Package(Subparser):
             nargs='*')
         self.subparser.add_argument(
             '-z', '--zipfile', default='pages.zip',
-            help="name of output file (.zip)")
+            help="name of output file (ends with .zip) [%(default)s]")
 
     def action(self, args):
-        pages = path.join(args.pages_dir, '*')
         lines = ['MoinMoinPackage|1']
+        pages = chain.from_iterable(glob.glob(path.join(pth, '*'))
+                                    for pth in args.pages_dir)
+
+        def pagename(pth):
+            return path.basename(pth.split('.')[0])
+
         with zipfile.ZipFile(args.zipfile, 'w') as zf:
-            for i, fn in enumerate(glob.glob(pages), start=1):
-                num = '{}'.format(i)
-                zf.write(fn, num)
-                lines.append('|'.join(['ReplaceUnderlay', num, path.basename(fn)]))
+            counter = count(1)
+            for pagename, grp in groupby(pages, key=pagename):
+
+                pages, data = self.page_group(grp)
+                for i, fn in enumerate(pages):
+                    log.info(fn)
+                    num = '{}'.format(next(counter))
+                    zf.write(fn, num)
+
+                    # Update the page manifest
+                    # if i == 0:
+                    #     # ReplaceUnderlay|filename|pagename
+                    #     lines.append('|'.join(['ReplaceUnderlay', num, pagename]))
+
+                    # AddRevision|filename|pagename|author|comment|trivial
+                    try:
+                        _, rev = fn.rsplit('.', 1)
+                        rev = rev if rev.isdigit() else None
+                    except ValueError:
+                        rev = None
+
+                    # if rev:
+                    #     line = ['AddRevision', num, pagename]
+                    #     # add comment, author if provided in pagename.revisions
+                    #     if data and rev in data:
+                    #         line.extend(data[rev])
+                    #     lines.append('|'.join(line))
+
+                    line = ['AddRevision', num, pagename]
+                    # add comment, author if provided in pagename.revisions
+                    if data and rev in data:
+                        line.extend(data[rev])
+                    lines.append('|'.join(line))
+
+            log.info('\n' + '\n'.join(lines))
             zf.writestr('MOIN_PACKAGE', '\n'.join(lines))
 
 
