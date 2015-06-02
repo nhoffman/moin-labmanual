@@ -9,9 +9,10 @@
     @license: UW Free Fork
 """
 
-from MoinMoin import wikiutil
 from MoinMoin.logfile import editlog
 from MoinMoin.Page import Page
+
+from moinlm.utils import parse_args
 
 Dependencies = ["time"]
 
@@ -29,51 +30,34 @@ def search_by_revision(request, pagename, rev):
         raise ValueError('This document has no revision number %s' % rev)
 
 
-def execute(macro, args):
-
-    print args
-    print wikiutil.parse_quoted_separated(args or u'')
+def execute(macro, argstr):
 
     request = macro.request
     _ = request.getText
     pagename = macro.formatter.page.page_name
     page = Page(request, pagename)
 
-    # def render_action(text, query, **kw):
-    #     kw.update(dict(rel='nofollow'))
-    #     return page.link_to(request, text, querystr=query, **kw)
+    style = ('color:red; border-style:dotted; '
+             'padding:0.5em; background-color:#FFCCCC; '
+             'width:75%%; display:block')
 
     try:
-        defaults = [
-            ('rev', None),
-            ('comment', ''),
-            ]
-        keys = [x[0] for x in defaults]
-        argv = dict(defaults)
+        args = parse_args(argstr or u'', posargs=['rev', 'comment'])
 
-        positional, kwargs, trailing = wikiutil.parse_quoted_separated(args or u'')
-
-        argv.update(dict((k, v) for k, v in zip(keys, positional) if v))
-        argv.update(kwargs)
+        comment = args['comment']
+        rev = args['rev']
 
         msg = 'Warning: this version is a draft. '
 
-        comment = argv['comment']
-        rev = argv['rev']
-
         if comment:
             msg += comment + '.'
-
-        style = """color:red; border-style:dotted;
-                padding:0.5em; background-color:#FFCCCC;
-                width:75%%; display:block"""
 
         if rev:
             rev_link = page.link_to(
                 request,
                 text=_('revision %s' % rev, formatted=False),
-                querystr = 'action=recall&rev=%s' % rev,
-                rel= 'nofollow'
+                querystr='action=recall&rev=%s' % rev,
+                rel='nofollow'
                 )
             rev_comment = search_by_revision(request, pagename, rev)
 
@@ -88,10 +72,5 @@ def execute(macro, args):
         return output + '<br/>'
 
     except Exception, err:
-        style = """color:red; border-style:dotted;
-                padding:0.5em; background-color:#FFCCCC;
-                width:75%%; display:block"""
-
         return macro.request.formatter.text(
             "<<LMDraftWarning Error: %s>>" % err.args[0], style=style)
-
