@@ -19,6 +19,7 @@ def parse_args(argstr, required=None, **kwargs):
 
     required = required or []
     positional, keyvalue, trailing = wikiutil.parse_quoted_separated(argstr or u'')
+
     # in the absence of positional arguments 'positional' is '[None]'
     positional = [x for x in positional if x is not None]
 
@@ -38,6 +39,9 @@ def parse_args(argstr, required=None, **kwargs):
         raise ValueError('Missing arguments: {}'.format(
             set(required) - set(argv.keys())))
 
-    return argv
+    # raise an error if there are unexpected keyword arguments in argstr
+    if set(argv.keys()) > set(required + kwargs.keys()):
+        raise ValueError('One or more unexpected keywords: {}'.format(
+            ','.join(set(argv.keys()) - set(required + kwargs.keys()))))
 
-    # raise an error if there are unexpected positional arguments or keywords
+    return argv

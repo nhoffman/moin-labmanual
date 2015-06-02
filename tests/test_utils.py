@@ -30,6 +30,7 @@ class TestParseArgs(unittest.TestCase):
 
         # positionl argument provided when none are defined
         self.assertRaises(ValueError, utils.parse_args, u'AAA')
+        self.assertRaises(ValueError, utils.parse_args, u'c=CCC', ['a', 'b'], b='BBB')
 
 
 if __name__ == '__main__':
