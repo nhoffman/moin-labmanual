@@ -17,6 +17,7 @@ def parse_args(argstr, posargs=None, **kwargs):
     * kwargs - optional keywords and default values are provided as key=value
     """
 
+    argstr = argstr or u''
     posargs = posargs or []
     positional, keyvalue, trailing = wikiutil.parse_quoted_separated(argstr or u'')
 

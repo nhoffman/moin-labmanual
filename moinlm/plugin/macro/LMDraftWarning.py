@@ -42,7 +42,7 @@ def execute(macro, argstr):
              'width:75%%; display:block')
 
     try:
-        args = parse_args(argstr or u'', posargs=['rev', 'comment'])
+        args = parse_args(argstr, posargs=['comment', 'rev'])
 
         comment = args['comment']
         rev = args['rev']
