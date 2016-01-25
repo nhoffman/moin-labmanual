@@ -20,7 +20,7 @@ setup(
     packages=find_packages(),
     package_dir={'moinlm': 'moinlm'},
     package_data={'moinlm': ['data/ver']},
-    entry_points={'console_scripts': ['moinlm = moinlm.moinlm:main']},
+    entry_points={'console_scripts': ['moinlm = moinlm.cli:main']},
     version=__version__,
     classifiers=[
         'Development Status :: 3 - Alpha',
