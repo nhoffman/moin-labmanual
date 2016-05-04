@@ -13,6 +13,7 @@ Dependencies
 Features
 ========
 
+TODO: write me!
 
 
 Running in standalone mode
@@ -28,7 +29,8 @@ First, execute this script from within the project repository::
 
 This script will perform the following actions:
 
-* download and unpack the MoinMoin tarball to ``./src/``
+* download and unpack the MoinMoin tarball to ``./src/moin-1.9.8``
+* create link ``wikiserver.py -> src/moin-1.9.8/wikiserver.py``
 * create a virtualenv ``./moin-env``
 * install MoinMoin to the virtualenv
 * create ``./wiki`` containing data for the wiki instance (copied from
