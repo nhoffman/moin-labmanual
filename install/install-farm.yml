@@ -14,21 +14,35 @@
 # - https://moinmo.in/HowTo/UbuntuFarm
 
 - hosts: localhost
-  sudo: no
+  become: no
 
   tasks:
+    - fail: msg="ansible version is {{ ansible_version['full'] }}, requires >= 2.0"
+      when: "{{ ansible_version['full'] | version_compare('2.0', '<') }}"
+      tags:
+        - always
+        - ansible-version
 
     - name: clean up dist directory
-      command: rm -rf ../dist
+      file: path=dist state=absent
+      tags:
+        - moinlm
 
     - name: build tarball for this package
-      command: chdir=.. python setup.py sdist
+      command: python setup.py sdist
+      tags:
+        - moinlm
 
-- hosts: ubuntu1
-  sudo: yes
+    - name: compile pages for installation to the wiki
+      command: ./moinlm.py package pages -z dist/000-moinlm-pages.zip
+      tags:
+        - pages
+
+- hosts: web_host
+  become: yes
 
   vars:
-    SERVER_NAME: ubuntu1
+    SERVER_NAME: 54.189.60.200
     SITE: moinmoin
     WIKI_USER: moinmoin
     WWW_USER: www-data
@@ -44,8 +58,16 @@
     SRC_DIR: "{{ DATA_DIR }}/src"
     WIKI_NAMES:
       - sandbox
+    # TODO: put in secrets
+    MOIN_SU_NAME: SuperUser
+    MOIN_SU_PASSWORD: foobar
 
   tasks:
+  - name: update apt
+    apt: update_cache=yes cache_valid_time=600
+    tags:
+      - system
+
   - name: install system packages
     apt: pkg={{ item }}
     with_items:
@@ -123,12 +145,12 @@
   - name: web-accessible directory for each wiki
     file: path="{{ SITE_DIR }}/{{ item }}"
           state=directory owner=root group=root mode=755
-    with_items: WIKI_NAMES
+    with_items: "{{ WIKI_NAMES }}"
 
   - name: wsgi script for each wiki
     template: src=templates/{{ WSGI_FILE }}
               dest={{ SITE_DIR }}/{{ item }}/{{ WSGI_FILE }} mode=644
-    with_items: WIKI_NAMES
+    with_items: "{{ WIKI_NAMES }}"
     notify:
       - restart apache
 
@@ -146,7 +168,7 @@
     template: src=templates/mywiki.conf
               dest=/etc/apache2/sites-available/{{ item }}.conf
               mode=644
-    with_items: WIKI_NAMES
+    with_items: "{{ WIKI_NAMES }}"
     notify:
       - enable sites
       - restart apache
@@ -157,17 +179,17 @@
   - name: create data subdirectory for each wiki
     file: path="{{ DATA_DIR }}/{{ item }}"
           state=directory owner=root group=root mode=755
-    with_items: WIKI_NAMES
+    with_items: "{{ WIKI_NAMES }}"
 
   - name: create a common underlay directory
     command: rsync -a {{ VENV }}/share/moin/underlay {{ DATA_DIR }}
     tags:
       - data-setup
 
-  - name: set up data directory structue for each wiki
+  - name: set up data directory structure for each wiki
     command: rsync -a {{ VENV }}/share/moin/data {{ DATA_DIR }}/{{ item }}
              --exclude=*-log
-    with_items: WIKI_NAMES
+    with_items: "{{ WIKI_NAMES }}"
     tags:
       - data-setup
     notify:
@@ -181,42 +203,22 @@
       - restart apache
     tags:
       - wiki-config
+      - moinlm
 
   - name: install config file to data dir for each wiki
     template: src=templates/mywiki.py dest={{ DATA_DIR }}/{{ item }}.py
-    with_items: WIKI_NAMES
+    with_items: "{{ WIKI_NAMES }}"
     tags:
       - wiki-config
     notify:
       - fix ownership of data dirs
       - restart apache
 
-  - name: create xapian index
-    command: "{{ VENV }}/bin/moin
-             --config-dir={{ DATA_DIR }}
-             --wiki-url=http://{{ SERVER_NAME }}/{{item}}/
-             index build --mode=rebuild"
-    with_items: WIKI_NAMES
-    notify:
-      - fix ownership of data dirs
-      - restart apache
-
-  - name: create a superuser account
-    command: "{{ VENV }}/bin/moin
-             --config-dir={{ DATA_DIR }}
-             --wiki-url=http://{{ SERVER_NAME }}/sandbox/
-             account create
-             --name=SuperUser
-             --password=foobar
-             --email=superuser@nowhere.com"
-    notify:
-      - fix ownership of data dirs
-
   ### install moinlm ###
   - name: register file name of tarball
-    local_action: shell basename $(ls -t ../dist/*.gz | head -1)
+    local_action: shell basename $(ls -t dist/moinlm*.gz | head -1)
     register: TARBALL
-    sudo: no
+    become: no
     tags:
       - moinlm
 
@@ -224,6 +226,8 @@
     copy: src=../dist/{{ TARBALL.stdout_lines[0] }}
           dest={{ SRC_DIR }}/{{ TARBALL.stdout_lines[0] }}
           owner={{ WWW_USER }} group={{ WWW_USER }} mode=664
+    tags:
+      - moinlm
 
   - name: expand tarball
     command: chdir={{ SRC_DIR }} tar -xf {{ TARBALL.stdout_lines[0] }}
@@ -237,6 +241,42 @@
     notify:
       - restart apache
 
+  - name: register file name of zipfile containing wiki pages
+    local_action: "shell basename $(ls -t dist/*pages.zip | head -1)"
+    register: PAGES
+    become: no
+    tags:
+      - pages
+
+  - name: upload zipfile containing wiki pages
+    copy: src=../dist/{{ PAGES.stdout_lines[0] }}
+          dest={{ DATA_DIR }}/underlay/pages/LanguageSetup/attachments/{{ PAGES.stdout_lines[0] }}
+          owner={{ WWW_USER }} group={{ WWW_USER }} mode=664
+    tags:
+      - pages
+
+  # moinlm is imported in farmconfig, so must be installed before this step
+  - name: create xapian index
+    command: "{{ VENV }}/bin/moin
+             --config-dir={{ DATA_DIR }}
+             --wiki-url=http://{{ SERVER_NAME }}/{{item}}/
+             index build --mode=rebuild"
+    with_items: "{{ WIKI_NAMES }}"
+    notify:
+      - fix ownership of data dirs
+      - restart apache
+
+  - name: create a superuser account
+    command: "{{ VENV }}/bin/moin
+             --config-dir={{ DATA_DIR }}
+             --wiki-url=http://{{ SERVER_NAME }}/sandbox/
+             account create
+             --name={{ MOIN_SU_NAME }}
+             --password={{ MOIN_SU_PASSWORD }}
+             --email=superuser@nowhere.com"
+    notify:
+      - fix ownership of data dirs
+
   handlers:
   # ownership of data dirs must match WSGIDaemonProcess
   - name: fix ownership of data dirs
@@ -246,7 +286,7 @@
   - name: enable sites
     command: a2ensite {{ item }}
     with_flattened:
-      - WIKI_NAMES
+      - "{{ WIKI_NAMES }}"
       - "{{ SITE }}"
 
   - name: restart apache

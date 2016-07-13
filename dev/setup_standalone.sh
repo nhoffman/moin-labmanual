@@ -28,7 +28,7 @@ chmod +x wikiserver.py
 # create pages.zip for installation to the wiki
 ./moinlm.py \
     package pages \
-    -z wiki/underlay/pages/LanguageSetup/attachments/000-moin-labmanual.zip
+    -z wiki/underlay/pages/LanguageSetup/attachments/000-moinlm-pages.zip
 
 # create a user account:
 # username: testuser

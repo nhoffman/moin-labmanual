@@ -33,8 +33,16 @@ class Config(FarmConfig):
     # b) if wiki content is maintained in many languages
     page_front_page = u"FrontPage"
 
+    navi_bar = [
+        # If you want to show your page_front_page here:
+        u'%(page_front_page)s',
+        u'RecentChanges',
+        u'FindPage',
+        u'HelpContents',
+    ]
+
     data_dir = '{{ DATA_DIR }}/{{ item }}/data/'
 
     # xapian setup, see https://moinmo.in/HowTo/UbuntuFarm
-    # xapian_index_dir = '/wiki/cache/xapian' # Directory where the Xapian search indexex are stored
-    xapian_index_dir = path.join(data_dir, 'cache', 'xapian') # Directory where the Xapian search indexes are stored
+    # we're specifying the location here so that we can have a separate index per wiki
+    xapian_index_dir = path.join(data_dir, 'cache', 'xapian')

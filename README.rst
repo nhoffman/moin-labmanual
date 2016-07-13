@@ -59,7 +59,7 @@ Next, install the underlay pages for this project. Visit this url:
 
 http://localhost:8080/LanguageSetup?action=AttachFile
 
-and find the entry for '000-moin-labmanual.zip' (should be the first line
+and find the entry for '000-moinlm-pages.zip' (should be the first line
 on the page), and click on "install".
 
 Finally, restart the server by interrupting the ``wikiserver.py``
@@ -75,3 +75,39 @@ registered until the server is restarted. During development, it's
 convenient to use ``dev/run_standalone.py`` to launch the server. This
 is simply a wrapper that runs ``wikiserver.py`` and will perform a
 restart after Ctrl-C.
+
+Deploying a wiki farm
+=====================
+
+This project provides an ansible script for deploying a wiki
+farm. Assuming you have already created a virtualenv, first, install
+ansible::
+
+  pip install ansible
+
+Run the deployment script as follows::
+
+  install/install-farm.yml -i install/hosts
+
+After completion of this script, you will need to manually install the
+underlay pages and help pages for the moinlm project more or less as
+above. Log in using the superuser credentials (XXX define these
+someplace), then visit your new site and append the following to the
+base url::
+
+  /LanguageSetup?action=language_setup&target=English--all_pages.zip
+
+You should see the message "Attachment 'English--all_pages.zip' installed"
+
+Next, install the underlay pages for this project. Visit this url::
+
+  /LanguageSetup?action=AttachFile
+
+and find the entry for '000-moinlm-pages.zip' (should be the first
+line on the page), and click on "install". You will need to restart
+apache for these changes to take effect::
+
+  sudo service apache2 restart
+
+
+
