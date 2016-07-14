@@ -57,10 +57,9 @@ You should see the message "Attachment 'English--all_pages.zip' installed"
 
 Next, install the underlay pages for this project. Visit this url:
 
-http://localhost:8080/LanguageSetup?action=AttachFile
+http://localhost:8080/LanguageSetup?action=language_setup&target=000-moinlm-pages.zip
 
-and find the entry for '000-moinlm-pages.zip' (should be the first line
-on the page), and click on "install".
+You should see the message "Attachment '000-moinlm-pages.zip' installed"
 
 Finally, restart the server by interrupting the ``wikiserver.py``
 script (press control+C), then starting it again. At this point the
