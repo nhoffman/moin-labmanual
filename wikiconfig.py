@@ -56,6 +56,11 @@ class LocalConfig(multiconfig.DefaultConfig):
         u'HelpContents',
     ]
 
+    # The default theme anonymous or new users get
+    theme_default = 'modernized_lm'
+    # theme_force = True
+
+
 # DEVELOPERS! Do not add your configuration items there,
 # you could accidentally commit them! Instead, create a
 # wikiconfig_local.py file containing this:

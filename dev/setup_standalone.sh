@@ -13,11 +13,15 @@ fi
 mkdir -p src
 moin_src=moin-${MOIN_VERSION}.tar.gz
 test -f src/$moin_src || \
-    wget -P src -N http://static.moinmo.in/files/$moin_src
+    wget -P src -nc http://static.moinmo.in/files/$moin_src
 tar -C src -xf src/$moin_src
 
 test -d moin-env || virtualenv moin-env
 
+# update pip
+moin-env/bin/pip install -U pip
+
+# install MoinMoin to the virtualenv
 moin-env/bin/python -c 'import MoinMoin' 2> /dev/null || \
     moin-env/bin/pip install src/moin-${MOIN_VERSION}
 
