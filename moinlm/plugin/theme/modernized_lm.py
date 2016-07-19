@@ -213,26 +213,27 @@ class Theme(ThemeBase):
                                                    id='userprefs',
                                                    rel='nofollow'))
 
-        # if request.user.valid:
-        #     if request.user.auth_method in request.cfg.auth_can_logout:
-        #         userlinks.append(d['page'].link_to(
-        #             request,
-        #             text=_('Logout'),
-        #             querystr={'action': 'logout',
-        #                       'logout': 'logout'},
-        #             id='logout',
-        #             rel='nofollow'))
-        # else:
-        #     query = {'action': 'login'}
-        #     # special direct-login link if the auth methods want no input
-        #     if request.cfg.auth_login_inputs == ['special_no_input']:
-        #         query['login'] = '1'
-        #     if request.cfg.auth_have_login:
-        #         userlinks.append(d['page'].link_to(request,
-        #                                            text=_("Login"),
-        #                                            querystr=query,
-        #                                            id='login',
-        #                                            rel='nofollow'))
+        # comment out to remove login link
+        if request.user.valid:
+            if request.user.auth_method in request.cfg.auth_can_logout:
+                userlinks.append(d['page'].link_to(
+                    request,
+                    text=_('Logout'),
+                    querystr={'action': 'logout',
+                              'logout': 'logout'},
+                    id='logout',
+                    rel='nofollow'))
+        else:
+            query = {'action': 'login'}
+            # special direct-login link if the auth methods want no input
+            if request.cfg.auth_login_inputs == ['special_no_input']:
+                query['login'] = '1'
+            if request.cfg.auth_have_login:
+                userlinks.append(d['page'].link_to(request,
+                                                   text=_("Login"),
+                                                   querystr=query,
+                                                   id='login',
+                                                   rel='nofollow'))
 
         userlinks_html = u'<span class="sep"> | </span>'.join(userlinks)
         html = u'<div id="username">%s</div>' % userlinks_html
