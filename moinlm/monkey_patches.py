@@ -1,6 +1,10 @@
-from MoinMoin.search.Xapian.search import XapianSearch
-from MoinMoin.search.builtin import MoinSearch
 import logging
+
+try:
+    from MoinMoin.search.Xapian.search import XapianSearch
+    from MoinMoin.search.builtin import MoinSearch
+except ImportError:
+    XapianSearch = None
 
 
 def _search_no_attachment(self):
@@ -63,4 +67,7 @@ def monkey_patch_xapian_search():
 
     """
 
-    XapianSearch._search = _search_no_attachment
+    if XapianSearch:
+        XapianSearch._search = _search_no_attachment
+    else:
+        logging.error('could not import XapianSearch - is the xapian module installed?')
