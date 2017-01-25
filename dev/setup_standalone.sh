@@ -34,7 +34,8 @@ chmod +x wikiserver.py
     package pages \
     -z wiki/underlay/pages/LanguageSetup/attachments/000-moinlm-pages.zip
 
-# create a user account:
+# create user accounts
+
 # username: testuser
 # password: testpass
 moin-env/bin/moin \
@@ -44,6 +45,16 @@ moin-env/bin/moin \
     --name=testuser \
     --password=testpass \
     --email=testuser@nowhere.com
+
+# username: superuser
+# password: superpass
+moin-env/bin/moin \
+    --config-dir=$(pwd) \
+    --wiki-url=http://localhost \
+    account create \
+    --name=superuser \
+    --password=superpass \
+    --email=superuser@nowhere.com
 
 
 

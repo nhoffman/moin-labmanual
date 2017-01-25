@@ -60,6 +60,9 @@ class LocalConfig(multiconfig.DefaultConfig):
     theme_default = 'modernized_lm'
     # theme_force = True
 
+    superuser = ['superuser']
+    acl_rights_before = u'superuser:read,write,delete,revert,admin '
+
 
 # DEVELOPERS! Do not add your configuration items there,
 # you could accidentally commit them! Instead, create a
