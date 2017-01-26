@@ -9,7 +9,7 @@ from operator import itemgetter
 
 from jinja2 import Template
 
-TRAINING_DB_NAME = 'training_log.sqlite3'
+TRAINING_DB_NAME = 'moinlm.sqlite3'
 
 
 class TrainingDB(object):
