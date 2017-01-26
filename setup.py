@@ -21,6 +21,10 @@ setup(
     package_dir={'moinlm': 'moinlm'},
     package_data={'moinlm': ['data/ver']},
     entry_points={'console_scripts': ['moinlm = moinlm.cli:main']},
+    install_requires=[
+        'moin==1.9.8',
+        'jinja2',
+    ],
     version=__version__,
     classifiers=[
         'Development Status :: 3 - Alpha',

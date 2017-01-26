@@ -2,6 +2,7 @@
 
 """
 
+from jinja2 import Template
 from os import path
 import sqlite3
 
@@ -44,18 +45,21 @@ class TrainingDB(object):
         self.conn.commit()
 
     def get_records(self, pagename=None):
-        sql = (
-            'select ' +
-            ('' if pagename else 'pagename, ') +
-            'datetime(timestamp, "localtime") as timestamp, ' +
-            'rev, user ' +
-            'from training'
-        )
+        template = Template("""
+        select
+        {% if not pagename %}pagename, {% endif %}
+        datetime(timestamp, "localtime") as timestamp,
+        rev,
+        user
+        from training
+        {% if pagename %}where pagename = ?{% endif %}
+        """)
 
+        sql = template.render(pagename=pagename)
         cur = self.conn.cursor()
 
         if pagename:
-            cur.execute(sql + ' where pagename = ?', (pagename,))
+            cur.execute(sql, (pagename,))
         else:
             cur.execute(sql)
 
