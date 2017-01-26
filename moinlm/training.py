@@ -2,31 +2,76 @@
 
 """
 
-from MoinMoin.Page import Page
-from MoinMoin.PageEditor import PageEditor
+from os import path
+import sqlite3
 
-traininglog_fields = ['pagename', 'rev', 'user', 'timestamp']
-traininglog_delim = ';'
-traininglog_name = u"TrainingLog"
+TRAINING_DB_NAME = 'training_log.sqlite3'
+
+
+class TrainingDB(object):
+    def __init__(self, request, db_path=None):
+        self.db_path = db_path or path.join(request.cfg.data_dir, TRAINING_DB_NAME)
+        self.conn = None
+
+    def __enter__(self):
+        self.conn = sqlite3.connect(self.db_path)
+        self.create_db()
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.conn.close()
+
+    def create_db(self):
+        sql = """
+        create table if not exists training
+        (pagename text,
+         rev integer,
+         user text,
+         timestamp DATE DEFAULT CURRENT_TIMESTAMP)
+        """
+        cur = self.conn.cursor()
+        cur.execute(sql)
+        self.conn.commit()
+
+    def add_record(self, **kwargs):
+        keys, values = zip(*kwargs.items())
+        sql = 'insert into training ({}) values ({})'.format(
+            ', '.join(keys),
+            ', '.join(['?'] * len(keys))
+        )
+        cur = self.conn.cursor()
+        cur.execute(sql, values)
+        self.conn.commit()
+
+    def get_records(self, pagename=None):
+        sql = (
+            'select ' +
+            ('' if pagename else 'pagename, ') +
+            'datetime(timestamp, "localtime") as timestamp, ' +
+            'rev, user ' +
+            'from training'
+        )
+
+        cur = self.conn.cursor()
+
+        if pagename:
+            cur.execute(sql + ' where pagename = ?', (pagename,))
+        else:
+            cur.execute(sql)
+
+        header = [col[0] for col in cur.description]
+        return header, list(cur.fetchall())
 
 
 def read_training_log(request, pagename=None):
-    logpage = Page(request, traininglog_name)
-    lines = logpage.getlines()
+    """Return (header, rows) for all training records, or for those
+    matching pagename if provided.
 
-    for line in lines:
-        if not line.strip() or line.startswith('#'):
-            continue
-
-        d = dict(zip(traininglog_fields, line.split(traininglog_delim)))
-        if not pagename:
-            yield d
-        elif d.get('pagename') == pagename:
-            yield d
+    """
+    with TrainingDB(request) as db:
+        return db.get_records(pagename=pagename)
 
 
-def record_training(request, page_info):
-    editor = PageEditor(request, traininglog_name, do_revision_backup=0)
-    raw_body = editor.get_raw_body_str()
-    new_line = traininglog_delim.join(page_info[f] for f in traininglog_fields)
-    editor.saveText(newtext=raw_body.strip() + '\n' + new_line, rev=0)
+def record_training(request, **kwargs):
+    with TrainingDB(request) as db:
+        db.add_record(**kwargs)
