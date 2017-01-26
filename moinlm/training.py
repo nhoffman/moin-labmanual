@@ -2,9 +2,12 @@
 
 """
 
-from jinja2 import Template
 from os import path
 import sqlite3
+from itertools import groupby
+from operator import itemgetter
+
+from jinja2 import Template
 
 TRAINING_DB_NAME = 'training_log.sqlite3'
 
@@ -47,12 +50,15 @@ class TrainingDB(object):
     def get_records(self, pagename=None):
         template = Template("""
         select
-        {% if not pagename %}pagename, {% endif %}
-        datetime(timestamp, "localtime") as timestamp,
-        rev,
-        user
+          {% if not pagename %}pagename, {% endif %}
+          date(datetime(timestamp, "localtime")) as date,
+          cast(round(0.499999 + julianday('now') - julianday(timestamp)) as integer)
+            as elapsed_days,
+          rev as revision,
+          user
         from training
         {% if pagename %}where pagename = ?{% endif %}
+        order by user, timestamp desc
         """)
 
         sql = template.render(pagename=pagename)
@@ -73,7 +79,9 @@ def read_training_log(request, pagename=None):
 
     """
     with TrainingDB(request) as db:
-        return db.get_records(pagename=pagename)
+        header, rows = db.get_records(pagename=pagename)
+        most_recent = [next(grp) for user, grp in groupby(rows, itemgetter(-1))]
+        return header, sorted(most_recent)
 
 
 def record_training(request, **kwargs):

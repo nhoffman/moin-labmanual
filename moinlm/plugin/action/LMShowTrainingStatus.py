@@ -31,7 +31,12 @@ def execute(pagename, request):
 
         log_table = DataBrowserWidget(request)
         log_table.setData(logtd)
-        request.theme.add_msg(log_table.render())
+
+        msg = """
+        <p>The <strong>most recent</strong> record for each user is shown</p>
+        """
+
+        request.theme.add_msg(msg + log_table.render())
     else:
         request.theme.add_msg(_('No training records for this page'))
 
