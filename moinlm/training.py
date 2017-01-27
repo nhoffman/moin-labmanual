@@ -5,7 +5,8 @@
 from os import path
 import sqlite3
 from itertools import groupby
-from operator import itemgetter
+from operator import attrgetter
+from collections import namedtuple
 
 from jinja2 import Template
 
@@ -50,15 +51,15 @@ class TrainingDB(object):
     def get_records(self, pagename=None):
         template = Template("""
         select
-          {% if not pagename %}pagename, {% endif %}
-          date(datetime(timestamp, "localtime")) as date,
+          pagename,
+          user,
           cast(round(0.499999 + julianday('now') - julianday(timestamp)) as integer)
             as elapsed_days,
-          rev as revision,
-          user
+          date(datetime(timestamp, "localtime")) as date,
+          rev as revision
         from training
         {% if pagename %}where pagename = ?{% endif %}
-        order by user, timestamp desc
+        order by pagename, user, timestamp desc
         """)
 
         sql = template.render(pagename=pagename)
@@ -70,7 +71,9 @@ class TrainingDB(object):
             cur.execute(sql)
 
         header = [col[0] for col in cur.description]
-        return header, list(cur.fetchall())
+        Row = namedtuple('Row', header)
+
+        return header, [Row(*row) for row in cur.fetchall()]
 
 
 def read_training_log(request, pagename=None):
@@ -80,8 +83,9 @@ def read_training_log(request, pagename=None):
     """
     with TrainingDB(request) as db:
         header, rows = db.get_records(pagename=pagename)
-        most_recent = [next(grp) for user, grp in groupby(rows, itemgetter(-1))]
-        return header, sorted(most_recent)
+        most_recent = [next(grp)
+                       for key, grp in groupby(rows, attrgetter('pagename', 'user'))]
+        return header, most_recent
 
 
 def record_training(request, **kwargs):

@@ -2,7 +2,8 @@
 
 """
 
-from itertools import izip_longest
+from itertools import groupby, izip_longest
+from operator import attrgetter
 
 # from MoinMoin.Page import Page
 # from MoinMoin.PageEditor import PageEditor
@@ -46,3 +47,26 @@ def parse_args(argstr, posargs=None, **kwargs):
             ','.join(set(argv.keys()) - set(posargs + kwargs.keys()))))
 
     return argv
+
+
+def pivot(rows, rowattr, colattr, cellfun=None, nullval=None):
+    """Create a table in "wide" format given a sequence of objects with
+    attributes 'rowattr' and 'colattr'. 'cellfun' is applied to each
+    row to provide the value appearingin each cell. The upper left
+    corner of the table is 'nullval'.
+
+    """
+    rowgetter = attrgetter(rowattr)
+    colgetter = attrgetter(colattr)
+    cellfun = cellfun or (lambda row: None)
+
+    colnames = sorted(set(colgetter(row) for row in rows))
+
+    # iterator of (rowname, {colname: cellval, ...})
+    pivot = ((rowname,
+              {colgetter(row): cellfun(row) for row in grp})
+             for rowname, grp in groupby(sorted(rows, key=rowgetter), rowgetter))
+
+    yield [nullval] + colnames
+    for rowname, data in pivot:
+        yield [rowname] + [data.get(colname, nullval) for colname in colnames]

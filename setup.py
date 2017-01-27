@@ -25,6 +25,7 @@ setup(
         'moin==1.9.8',
         'jinja2',
     ],
+    test_suite='tests',
     version=__version__,
     classifiers=[
         'Development Status :: 3 - Alpha',
