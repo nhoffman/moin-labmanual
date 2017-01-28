@@ -51,12 +51,13 @@ def parse_args(argstr, posargs=None, **kwargs):
 
 
 def pivot(rows, rowattr, colattr, cellfun=None, nullval=None, colnames=None):
-    """Create a table in "wide" format given a sequence of objects with
-    attributes 'rowattr' and 'colattr'. 'cellfun' is applied to each
-    row to provide the value appearing in each cell. The upper left
-    corner of the table is 'nullval'. Column names may be specified by
-    'colnames', defining a subset or superset of names appearing in
-    rows. If colnames is a list, the order will be preserved.
+    """Create a table in "wide" format consisting of a list of rows
+    given a sequence of objects with attributes 'rowattr' and
+    'colattr'. 'cellfun' is applied to each row to provide the value
+    appearing in each cell. The upper left corner of the table is
+    'nullval'. Column names may be specified by 'colnames', defining a
+    subset or superset of names appearing in rows. If colnames is a
+    list, the order will be preserved.
 
     """
 
@@ -65,20 +66,18 @@ def pivot(rows, rowattr, colattr, cellfun=None, nullval=None, colnames=None):
     cellfun = cellfun or (lambda row: None)
 
     if colnames and isinstance(colnames, list):
-        colnames = OrderedDict((c, None) for c in colnames)
+        # preserve order
+        colnames = OrderedDict((c, None) for c in colnames).keys()
     elif colnames:
-        colnames = OrderedDict((c, None) for c in sorted(colnames))
+        colnames = sorted(set(colnames))
     else:
-        colnames = OrderedDict(
-            (c, None) for c in sorted(colgetter(row) for row in rows))
-
-    # colnames = sorted(set(colgetter(row) for row in rows))
+        colnames = sorted({colgetter(row) for row in rows})
 
     # iterator of (rowname, {colname: cellval, ...})
     pivot = ((rowname,
               {colgetter(row): cellfun(row) for row in grp})
              for rowname, grp in groupby(sorted(rows, key=rowgetter), rowgetter))
 
-    yield [nullval] + colnames.keys()
+    yield [nullval] + colnames
     for rowname, data in pivot:
         yield [rowname] + [data.get(colname, nullval) for colname in colnames]
