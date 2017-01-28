@@ -2,6 +2,7 @@
 
 """
 
+from collections import OrderedDict
 from itertools import groupby, izip_longest
 from operator import attrgetter
 
@@ -49,24 +50,35 @@ def parse_args(argstr, posargs=None, **kwargs):
     return argv
 
 
-def pivot(rows, rowattr, colattr, cellfun=None, nullval=None):
+def pivot(rows, rowattr, colattr, cellfun=None, nullval=None, colnames=None):
     """Create a table in "wide" format given a sequence of objects with
     attributes 'rowattr' and 'colattr'. 'cellfun' is applied to each
-    row to provide the value appearingin each cell. The upper left
-    corner of the table is 'nullval'.
+    row to provide the value appearing in each cell. The upper left
+    corner of the table is 'nullval'. Column names may be specified by
+    'colnames', defining a subset or superset of names appearing in
+    rows. If colnames is a list, the order will be preserved.
 
     """
+
     rowgetter = attrgetter(rowattr)
     colgetter = attrgetter(colattr)
     cellfun = cellfun or (lambda row: None)
 
-    colnames = sorted(set(colgetter(row) for row in rows))
+    if colnames and isinstance(colnames, list):
+        colnames = OrderedDict((c, None) for c in colnames)
+    elif colnames:
+        colnames = OrderedDict((c, None) for c in sorted(colnames))
+    else:
+        colnames = OrderedDict(
+            (c, None) for c in sorted(colgetter(row) for row in rows))
+
+    # colnames = sorted(set(colgetter(row) for row in rows))
 
     # iterator of (rowname, {colname: cellval, ...})
     pivot = ((rowname,
               {colgetter(row): cellfun(row) for row in grp})
              for rowname, grp in groupby(sorted(rows, key=rowgetter), rowgetter))
 
-    yield [nullval] + colnames
+    yield [nullval] + colnames.keys()
     for rowname, data in pivot:
         yield [rowname] + [data.get(colname, nullval) for colname in colnames]
