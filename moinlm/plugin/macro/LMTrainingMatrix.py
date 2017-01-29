@@ -31,6 +31,15 @@ def group_from_page(request, pagename):
             if line.strip().startswith('*')}
 
 
+def highlight(val, max_days=365):
+    if not val:
+        return 'missing'
+    elif val > max_days:
+        return 'old'
+    else:
+        return 'ok'
+
+
 def main(macro, pattern=None, users=None, show_missing=False):
     request = macro.request
 
@@ -56,6 +65,36 @@ def main(macro, pattern=None, users=None, show_missing=False):
     table = decorate(request, table, show_missing=show_missing)
 
     template = Template("""
+{% set cell_width = '1em' %}
+<style>
+  table.training {
+  }
+  th.rotate {
+  -webkit-transform: rotate(90deg);
+  -moz-transform: rotate(90deg);
+  -ms-transform: rotate(90deg);
+  -o-transform: rotate(90deg);
+  transform: rotate(90deg) translatex(-6.75em) translatey(2.1em);
+  transform-origin: left bottom;
+  height: 6em;
+  font-family: "Lucida Console", Monaco, monospace;
+  }
+  div.rotate {
+  max-width: {{ cell_width }};
+  min-width: {{ cell_width }};
+  }
+  td.training {
+  max-width: {{ cell_width }};
+  min-width: {{ cell_width }};
+  font-size: 75%;
+  }
+  td.training-odd {
+  opacity: 0.6;
+  }
+  td.missing { background-color: #d2d4d8;}
+  td.ok {color: white; background-color: green;}
+  td.old {color: yellow; background-color: yellow;}
+</style>
 <div>
   <ul>
     <li>Each cell shows the elapsed time in days since each page was read</li>
@@ -73,10 +112,12 @@ def main(macro, pattern=None, users=None, show_missing=False):
       {% endif %}
     </li>
   </ul>
-  <table>
+
+  <table class="training">
     <tr>
-      {% for name in header %}
-	<th>{{ name }}</th>
+      <th style="width: 30em;"></th>
+      {% for name in header[1:] %}
+	<th class="rotate"><div class="rotate" >{{ name }}</div></th>
       {% endfor %}
     </tr>
 
@@ -84,8 +125,10 @@ def main(macro, pattern=None, users=None, show_missing=False):
       <tr>
 	<td nowrap>{{ row[0] }}</td>
 	{% for val in row[1:] %}
-	  <td>{{ val }}</td>
-	{% endfor %}
+	  <td class="training {{ highlight(val) }} {% if loop.index is divisibleby(2) %} training-odd{% endif %}">
+	    {{ val }}
+	  </td>
+	  {% endfor %}
       </tr>
     {% endfor %}
   </table>
@@ -98,6 +141,7 @@ def main(macro, pattern=None, users=None, show_missing=False):
         user_page_link=user_page_link,
         pattern=pattern,
         show_missing=show_missing,
+        highlight=highlight,
     )
     return msg
 
