@@ -36,6 +36,10 @@ class TrainingDB(object):
         """
         cur = self.conn.cursor()
         cur.execute(sql)
+        cur.execute(
+            'create index if not exists ix_training_pagename on training(pagename)')
+        cur.execute(
+            'create index if not exists ix_training_user on training(user)')
         self.conn.commit()
 
     def add_record(self, **kwargs):
