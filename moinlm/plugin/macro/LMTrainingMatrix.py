@@ -1,4 +1,15 @@
-"""
+"""LMTrainingMatrix
+
+Macro for displaying days elapsed since users have documented that
+they have read specified pages.
+
+Options:
+
+* pattern - a regular expression limiting the list of pages to be displayed
+* users - name of a Group page specifying a set of users to display
+* show_missing - if 'yes', diplay pages that have been deleted or renamed
+* max_days - number of days within which a page should have been read
+* show_help - if 'yes', print this help text
 
 """
 
@@ -31,16 +42,12 @@ def group_from_page(request, pagename):
             if line.strip().startswith('*')}
 
 
-def highlight(val, max_days=365):
-    if not val:
-        return 'missing'
-    elif val > max_days:
-        return 'old'
-    else:
-        return 'ok'
+def main(macro, pattern=None, users=None, show_missing=False, max_days=365,
+         show_help=False):
 
+    if show_help:
+        return '<pre>{}</pre>'.format(__doc__)
 
-def main(macro, pattern=None, users=None, show_missing=False):
     request = macro.request
 
     fields, rows = read_training_log(request)
@@ -54,6 +61,11 @@ def main(macro, pattern=None, users=None, show_missing=False):
         colnames = None
         user_page_link = None
 
+    try:
+        max_days = int(max_days)
+    except ValueError:
+        raise ValueError('max_days must be an integer')
+
     table = pivot(rows,
                   rowattr='pagename',
                   colattr='user',
@@ -63,6 +75,14 @@ def main(macro, pattern=None, users=None, show_missing=False):
 
     header = next(table)
     table = decorate(request, table, show_missing=show_missing)
+
+    def highlight(val):
+        if not val:
+            return 'missing'
+        elif val > max_days:
+            return 'old'
+        else:
+            return 'ok'
 
     template = Template("""
 {% set cell_width = '1em' %}
@@ -111,6 +131,8 @@ def main(macro, pattern=None, users=None, show_missing=False):
 	<strong>excluded</strong>
       {% endif %}
     </li>
+    <li>Cells are green when a page has been read within
+      <strong>{{ max_days }}</strong> days</li>
   </ul>
 
   <table class="training">
@@ -142,6 +164,7 @@ def main(macro, pattern=None, users=None, show_missing=False):
         pattern=pattern,
         show_missing=show_missing,
         highlight=highlight,
+        max_days=max_days,
     )
     return msg
 
