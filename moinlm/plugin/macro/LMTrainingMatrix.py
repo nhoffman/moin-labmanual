@@ -76,26 +76,14 @@ def main(macro, pattern=None, users=None, show_missing=False, max_days=365,
     header = next(table)
     table = decorate(request, table, show_missing=show_missing)
 
-    def highlight(val):
-        if not val:
-            return 'missing'
-        elif val > max_days:
-            return 'old'
-        else:
-            return 'ok'
-
     template = Template("""
 {% set cell_width = '1em' %}
 <style>
-  table.training {
-  }
   th.rotate {
-  -webkit-transform: rotate(90deg);
-  -moz-transform: rotate(90deg);
-  -ms-transform: rotate(90deg);
-  -o-transform: rotate(90deg);
-  transform: rotate(90deg) translatex(-6.75em) translatey(2.1em);
-  transform-origin: left bottom;
+  {% for prefix in ['-webkit', '-moz-', '-ms-', '-o-', ''] %}
+    {{ prefix }}transform: rotate(90deg) translatex(-6.75em) translatey(2.1em);
+    {{ prefix }}transform-origin: left bottom;
+  {% endfor %}
   height: 6em;
   font-family: "Lucida Console", Monaco, monospace;
   }
@@ -111,13 +99,24 @@ def main(macro, pattern=None, users=None, show_missing=False, max_days=365,
   td.training-odd {
   opacity: 0.6;
   }
-  td.missing { background-color: #d2d4d8;}
-  td.ok {color: white; background-color: green;}
-  td.old {color: yellow; background-color: yellow;}
+  .missing { background-color: #d2d4d8;}
+  span.missing { padding: 2px;}
+  .ok {color: white; background-color: green;}
+  span.ok { padding: 2px;}
+  .old {background-color: yellow;}
+  span.old { padding: 2px;}
 </style>
 <div>
   <ul>
     <li>Each cell shows the elapsed time in days since each page was read</li>
+    <li>
+      Cells are <span class="ok">green</span> when a page has been read within
+      <strong>{{ max_days }}</strong>
+      days; <span class="old">yellow</span> when the page has been
+      read at some time in the past;
+      and <span class="missing">grey</span> when the page has never
+      been read.
+    </li>
     {% if pattern %}
       <li>Pages listed below match the pattern <strong>"{{ pattern }}"</strong></li>
     {% endif %}
@@ -131,8 +130,6 @@ def main(macro, pattern=None, users=None, show_missing=False, max_days=365,
 	<strong>excluded</strong>
       {% endif %}
     </li>
-    <li>Cells are green when a page has been read within
-      <strong>{{ max_days }}</strong> days</li>
   </ul>
 
   <table class="training">
@@ -147,10 +144,19 @@ def main(macro, pattern=None, users=None, show_missing=False, max_days=365,
       <tr>
 	<td nowrap>{{ row[0] }}</td>
 	{% for val in row[1:] %}
-	  <td class="training {{ highlight(val) }} {% if loop.index is divisibleby(2) %} training-odd{% endif %}">
-	    {{ val }}
-	  </td>
-	  {% endfor %}
+	  {% if loop.index is divisibleby(2) %}
+	    {% set col_class = ' training-odd' %}
+	  {% else %}
+            {% set col_class = '' %}
+	  {% endif %}
+	  {% if not val %}
+	    <td class="training missing{{ col_class }}">&nbsp;</td>
+	  {% elif val > max_days %}
+	    <td class="training old{{ col_class }}">&nbsp;</td>
+	  {% else %}
+	    <td class="training ok{{ col_class }}">{{ val }}</td>
+	  {% endif %}
+	{% endfor %}
       </tr>
     {% endfor %}
   </table>
@@ -163,7 +169,6 @@ def main(macro, pattern=None, users=None, show_missing=False, max_days=365,
         user_page_link=user_page_link,
         pattern=pattern,
         show_missing=show_missing,
-        highlight=highlight,
         max_days=max_days,
     )
     return msg
