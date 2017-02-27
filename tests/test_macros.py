@@ -1,18 +1,14 @@
 #!/usr/bin/env python
 
-import sys
-import os
+import re
 import unittest
 import logging
-from collections import namedtuple
-from operator import attrgetter
 
 from MoinMoin.web.contexts import ScriptContext
 from MoinMoin.Page import Page
 from MoinMoin.logfile import editlog
 
-from moinlm import utils
-from moinlm.plugin.macro.LMPageList2 import filter_log
+from moinlm.plugin.macro.LMPageList2 import get_last_approved, get_page_status
 
 log = logging
 
@@ -21,17 +17,30 @@ request = ScriptContext()
 
 class TestLMReviewStatus(unittest.TestCase):
     def setUp(self):
-        page = Page(request, u'LMDocumentExample')
-        self.log = editlog.EditLog(request, rootpagename=page.page_name)
+        self.page = Page(request, u'LMDocumentExample')
+        self.log = editlog.EditLog(request, rootpagename=self.page.page_name)
 
     def test01(self):
-        filtered = filter_log(request, self.log)
+        filtered = get_last_approved(request, self.log)
         self.assertEqual(filtered.rev, '00000003')
 
     def test02(self):
-        filtered = filter_log(request, self.log, log_rexp='reviewed')
+        filtered = get_last_approved(
+            request, self.log, log_re=re.compile('reviewed', re.IGNORECASE))
         self.assertEqual(filtered.rev, '00000002')
 
+    def test03(self):
+        status = get_page_status(self.page, request)
+        self.assertEqual(status.rev, '3')
+
+    def test04(self):
+        status = get_page_status(
+            self.page, request, log_rexp='reviewed')
+        self.assertEqual(status.rev, '2 (3)')
+
+    def test05(self):
+        status = get_page_status(self.page, request, log_rexp='foo')
+        self.assertFalse(status.ever_approved)
 
 
 if __name__ == '__main__':

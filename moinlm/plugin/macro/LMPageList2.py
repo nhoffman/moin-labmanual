@@ -4,11 +4,19 @@ Macro for displaying approval status for a list of pages.
 
 Options:
 
+ * page - a pattern for matching page names (required). System pages
+   are excluded.
+ * comment - (default None) a pattern used to match comments in the revision
+   history of each page.
+ * interval - (default 365) Number of days after most revent revision
+   or revision matching comment parameter that a page is considered
+   "expired."
+ * show - (default "all") Provide a value of "expired" or "uptodate"
+   to include only expired or fully approved pages, respectively.
+ * editors - name of a group page containing a list of users.
 
 """
 
-from itertools import ifilter, chain
-from operator import attrgetter
 from collections import namedtuple
 import re
 from datetime import datetime
@@ -23,10 +31,9 @@ from MoinMoin.logfile import editlog
 Dependencies = ["time"]
 
 
-def group_from_page(request, pagename):
-    page = Page(request, pagename)
+def group_from_page(page):
     if not page.exists():
-        raise ValueError('The page "{}" does not exist'.format(pagename))
+        raise ValueError('The page "{}" does not exist'.format(page.page_name))
     return {line.split()[-1]
             for line in page.get_body().splitlines()
             if line.strip().startswith('*')}
@@ -90,6 +97,7 @@ PageStatus = namedtuple('PageStatus', [
     'date',
     'elapsed',
     'is_approved',
+    'ever_approved',
     'comment',
     'comment_class',
 ])
@@ -117,7 +125,8 @@ def get_page_status(page, request, log_rexp=None, approvers=None, interval=None)
 
         author = get_editor(request, last_approved)
         elapsed = get_elapsed_since_edit(last_approved)
-        is_approved = elapsed.days <= interval if interval else True
+        is_approved = (elapsed.days <= interval) if interval else True
+        ever_approved = True
         comment_class = 'approved' if is_approved else 'expired'
         date = get_modification_date(last_approved)
         if log_rexp:
@@ -132,6 +141,7 @@ def get_page_status(page, request, log_rexp=None, approvers=None, interval=None)
         author = get_editor(request, current)
         elapsed = get_elapsed_since_edit(current)
         is_approved = False
+        ever_approved = False
         comment_class = 'unapproved'
         date = get_modification_date(current)
         comment = current.comment
@@ -144,6 +154,7 @@ def get_page_status(page, request, log_rexp=None, approvers=None, interval=None)
         date=date,
         elapsed=elapsed.days if elapsed.days >= 1 else '< 1',
         is_approved=is_approved,
+        ever_approved=ever_approved,
         comment=comment,
         comment_class=comment_class,
     )
@@ -167,7 +178,17 @@ def main(macro, pattern='regex:.+', comment=None, interval=365, show='all',
             'The argument "show" must have one of the following values: ' +
             ', '.join(showvals))
 
-    approvers = group_from_page(editors) if editors else None
+    try:
+        interval = int(interval)
+    except (ValueError, TypeError):
+        raise ValueError('"interval" must be a number, was given "{}"'.format(interval))
+
+    if editors:
+        approver_page = Page(request, editors)
+        approvers = group_from_page(approver_page)
+    else:
+        approver_page = None
+        approvers = None
 
     page_rexp = pattern + ' -domain:system'
     log_rexp = comment or None
@@ -190,7 +211,7 @@ def main(macro, pattern='regex:.+', comment=None, interval=365, show='all',
     pagestatus = (get_status(page) for page in pages)
 
     template = Template("""
-<style>
+ <style>
   tr.unapproved { color: grey; }
   td.approved { background: #33FF00; }
   td.expired { background: red; color: white; }
@@ -198,6 +219,48 @@ def main(macro, pattern='regex:.+', comment=None, interval=365, show='all',
   td.modified { background: yellow; }
   span.matched { font-weight: bold; text-decoration: underline; }
 </style>
+
+<ol>
+  <li>
+    Pages below match the search term <strong>"{{ page_pattern }}"</strong>
+  </li>
+  {% if show == 'expired' %}
+    <li>Only pages in need of revision are shown.</li>
+  {% elif show == 'uptodate' %}
+    <li>Only up to date pages are shown.</li>
+  {% endif %}
+  {% if comment_pattern %}
+    <li>
+      The most recent page edit with a comment matching the search term
+      <strong>"{{ comment_pattern }}"</strong> is shown (or the most
+      recent entry if no match).
+    </li>
+    <li>
+      Revision numbers are highlighted if there were changes since
+      the approved revision (most recent revision in parentheses).
+    </li>
+  {% else %}
+    <li>
+      The most recent log entry for each page is shown.
+    </li>
+  {% endif %}
+  <li>
+    Elapsed time since the most recent approval (or the most recent
+    revision if never approved) is shown in days.
+  </li>
+  {% if interval %}
+    <li>
+      Pages must have been approved at least <strong>{{ interval }}</strong> days ago.
+    </li>
+  {% endif %}
+  {% if approver_page %}
+    <li>
+      Pages must have been approved by users listed in the page
+      {{ approver_page.link_to(request) }}
+    </li>
+  {% endif %}
+</ol>
+
 <table>
   <tr>
     <th>Page</th>
@@ -209,7 +272,7 @@ def main(macro, pattern='regex:.+', comment=None, interval=365, show='all',
     <th>Action</th>
   </tr>
   {% for page in pagestatus %}
-    <tr{% if not page.is_approved %} class="unapproved"{% endif %}>
+    <tr{% if not page.ever_approved %} class="unapproved"{% endif %}>
       <td>{{ page.page.link_to(request) }}</td>
       <td class="{{ page.rev_class }}">{{ page.rev }}</td>
       <td>{{ page.date.strftime('%Y-%m-%d') }}</td>
@@ -228,8 +291,13 @@ def main(macro, pattern='regex:.+', comment=None, interval=365, show='all',
     """)
 
     return template.render(
+        page_pattern=pattern,
         pagestatus=pagestatus,
         request=request,
+        show=show,
+        comment_pattern=comment,
+        interval=interval,
+        approver_page=approver_page,
     )
 
 
