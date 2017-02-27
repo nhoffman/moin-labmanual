@@ -172,16 +172,11 @@ def main(macro, pattern='regex:.+', comment=None, interval=365, show='all',
     if not pattern or pattern.isspace() or pattern in {'""', "''"}:
         raise ValueError('Please use a more selective search term for "pattern"')
 
-    showvals = {'all', 'expired', 'uptodate'}
-    if show not in showvals:
-        raise ValueError(
-            'The argument "show" must have one of the following values: ' +
-            ', '.join(showvals))
-
     try:
         interval = int(interval)
     except (ValueError, TypeError):
-        raise ValueError('"interval" must be a number, was given "{}"'.format(interval))
+        raise ValueError(
+            '"interval" must be a number, was given "{}"'.format(interval))
 
     if editors:
         approver_page = Page(request, editors)
@@ -210,6 +205,19 @@ def main(macro, pattern='regex:.+', comment=None, interval=365, show='all',
     pages = (hit.page for hit in result.hits)
     pagestatus = (get_status(page) for page in pages)
 
+    if show == 'approved':
+        pagestatus = (s for s in pagestatus if s.is_approved)
+    elif show == 'expired':
+        pagestatus = (s for s in pagestatus if s.ever_approved and not s.is_approved)
+    elif show == 'unapproved':
+        pagestatus = (s for s in pagestatus if not s.is_approved)
+    elif show != 'all':
+        showvals = ['all', 'expired', 'approved', 'unapproved']
+        raise ValueError(
+            'The argument "show" must have one of the following values: ' +
+            ', '.join(showvals))
+
+
     template = Template("""
  <style>
   tr.unapproved { color: grey; }
@@ -224,10 +232,18 @@ def main(macro, pattern='regex:.+', comment=None, interval=365, show='all',
   <li>
     Pages below match the search term <strong>"{{ page_pattern }}"</strong>
   </li>
-  {% if show == 'expired' %}
-    <li>Only pages in need of revision are shown.</li>
-  {% elif show == 'uptodate' %}
-    <li>Only up to date pages are shown.</li>
+  {% if show == 'unapproved' %}
+    <li>
+      Only <strong>pages in need of approval</strong> (expired or
+      never approved) are shown.
+    </li>
+  {% elif show == 'approved' %}
+    <li>Only <strong>approved</strong> pages are shown.</li>
+  {% elif show == 'expired' %}
+    <li>
+      Only pages that were previously approved but <strong>require
+      re-approval</strong> are shown.
+    </li>
   {% endif %}
   {% if comment_pattern %}
     <li>
@@ -267,8 +283,8 @@ def main(macro, pattern='regex:.+', comment=None, interval=365, show='all',
     <th>Rev</th>
     <th>Date</th>
     <th>Elapsed</th>
-    <th>Editor</th>
     <th>Comment</th>
+    <th>Editor</th>
     <th>Action</th>
   </tr>
   {% for page in pagestatus %}
@@ -276,9 +292,9 @@ def main(macro, pattern='regex:.+', comment=None, interval=365, show='all',
       <td>{{ page.page.link_to(request) }}</td>
       <td class="{{ page.rev_class }}">{{ page.rev }}</td>
       <td>{{ page.date.strftime('%Y-%m-%d') }}</td>
-      <td>{{ page.elapsed }}</td>
-      <td>{{ page.author or '' }}</td>
+      <td class="{{ page.comment_class }}">{{ page.elapsed }}</td>
       <td class="{{ page.comment_class }}">{{ page.comment }}</td>
+      <td>{{ page.author or '' }}</td>
       <td>
     {{ page.page.link_to(request, querystr='action=info', text='info') }}
     {{ page.page.link_to(request,
@@ -286,9 +302,7 @@ def main(macro, pattern='regex:.+', comment=None, interval=365, show='all',
       </td>
     </tr>
 {% endfor %}
-</table>
-
-    """)
+</table>""")
 
     return template.render(
         page_pattern=pattern,
