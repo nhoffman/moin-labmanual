@@ -11,8 +11,10 @@ Options:
  * interval - (default 365) Number of days after most revent revision
    or revision matching comment parameter that a page is considered
    "expired."
- * show - (default "all") Provide a value of "expired" or "uptodate"
-   to include only expired or fully approved pages, respectively.
+ * show - (default "all") Permitted values are "expired" (show only
+   previously-approved pages that have since expired), "approved"
+   (pages that are approved and up to date), or "unapproved" (never
+   approved).
  * editors - name of a group page containing a list of users.
 
 """
