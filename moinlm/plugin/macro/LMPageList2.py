@@ -6,15 +6,17 @@ Options:
 
  * page - a pattern for matching page names (required). System pages
    are excluded.
- * comment - (default None) a pattern used to match comments in the revision
-   history of each page.
+ * comment - (do not match comments by default) a pattern used to
+   match comments in the revision history of each page.
  * interval - (default 365) Number of days after most revent revision
    or revision matching comment parameter that a page is considered
    "expired."
- * show - (default "all") Permitted values are "expired" (show only
-   previously-approved pages that have since expired), "approved"
-   (pages that are approved and up to date), or "unapproved" (never
-   approved).
+ * show - (default "all") Permitted values are as follows:
+     - all: show all matching pages regrdless of approval status
+     - expired: show only previously-approved pages that have since expired
+     - approved: pages that are approved and up to date
+     - unapproved: expired or never approved
+   Note that deprecated pages are never shown.
  * editors - name of a group page containing a list of users.
 
 """
@@ -43,6 +45,19 @@ def group_from_page(page):
 
 def get_editor(request, logline):
     return User(request, id=logline.userid).name
+
+
+def get_metadata(page):
+    """Return a dict derived from page metadata. Metadata is defined at
+    the top of the page in the format:
+
+    #key [value]
+
+    where value is optional and is separated from key by one or more
+    spaces. Lines beginning with more than one '#' are skipped.
+
+    """
+    return {k: v or None for k, v in page.meta if not k.startswith('#')}
 
 
 def get_last_approved(request, log, log_re=None, approvers=None):
@@ -205,6 +220,7 @@ def main(macro, pattern='regex:.+', comment=None, interval=365, show='all',
         sort='page_name')
 
     pages = (hit.page for hit in result.hits)
+    pages = (page for page in pages if 'deprecated' not in get_metadata(page))
     pagestatus = (get_status(page) for page in pages)
 
     if show == 'approved':
@@ -218,7 +234,6 @@ def main(macro, pattern='regex:.+', comment=None, interval=365, show='all',
         raise ValueError(
             'The argument "show" must have one of the following values: ' +
             ', '.join(showvals))
-
 
     template = Template("""
  <style>
