@@ -32,6 +32,8 @@ from MoinMoin.Page import Page
 from MoinMoin.user import User
 from MoinMoin.logfile import editlog
 
+from moinlm.utils import is_deprecated
+
 Dependencies = ["time"]
 
 
@@ -45,19 +47,6 @@ def group_from_page(page):
 
 def get_editor(request, logline):
     return User(request, id=logline.userid).name
-
-
-def get_metadata(page):
-    """Return a dict derived from page metadata. Metadata is defined at
-    the top of the page in the format:
-
-    #key [value]
-
-    where value is optional and is separated from key by one or more
-    spaces. Lines beginning with more than one '#' are skipped.
-
-    """
-    return {k: v or None for k, v in page.meta if not k.startswith('#')}
 
 
 def get_last_approved(request, log, log_re=None, approvers=None):
@@ -220,7 +209,7 @@ def main(macro, pattern='regex:.+', comment=None, interval=365, show='all',
         sort='page_name')
 
     pages = (hit.page for hit in result.hits)
-    pages = (page for page in pages if 'deprecated' not in get_metadata(page))
+    pages = (page for page in pages if not is_deprecated(page))
     pagestatus = (get_status(page) for page in pages)
 
     if show == 'approved':

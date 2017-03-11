@@ -370,7 +370,8 @@ class Theme(ThemeBase):
         extra_titles = {
             'LMDigitalSignature': _('Document review (electronic signature)'),
             'LMRecordTraining': _('I have read this page...'),
-            'LMShowTrainingStatus': _('Who has read this page?')
+            'LMShowTrainingStatus': _('Who has read this page?'),
+            'LMArchivePage': _('Archive this page'),
             }
 
         options = []

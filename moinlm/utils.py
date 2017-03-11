@@ -81,3 +81,20 @@ def pivot(rows, rowattr, colattr, cellfun=None, nullval=None, colnames=None):
     yield [nullval] + colnames
     for rowname, data in pivot:
         yield [rowname] + [data.get(colname, nullval) for colname in colnames]
+
+
+def get_metadata(page):
+    """Return a dict derived from page metadata. Metadata is defined at
+    the top of the page in the format:
+
+    #key [value]
+
+    where value is optional and is separated from key by one or more
+    spaces. Lines beginning with more than one '#' are skipped.
+
+    """
+    return {k: v or None for k, v in page.meta if not k.startswith('#')}
+
+
+def is_deprecated(page):
+    return 'deprecated' in get_metadata(page)
