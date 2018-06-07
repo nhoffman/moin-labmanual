@@ -25,6 +25,9 @@ moin-env/bin/pip install -U pip
 moin-env/bin/python -c 'import MoinMoin' 2> /dev/null || \
     moin-env/bin/pip install src/moin-${MOIN_VERSION}
 
+# install other requirements
+moin-env/bin/pip install -r requirements.txt
+
 test -d wiki || cp -r src/moin-${MOIN_VERSION}/wiki .
 ln -sf src/moin-${MOIN_VERSION}/wikiserver.py .
 chmod +x wikiserver.py
