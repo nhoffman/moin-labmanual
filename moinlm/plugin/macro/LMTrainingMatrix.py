@@ -17,6 +17,7 @@ from operator import attrgetter
 import re
 from collections import namedtuple
 import traceback
+import cgi
 
 from jinja2 import Template
 from MoinMoin import wikiutil
@@ -194,5 +195,6 @@ def execute(macro, argstr):
         return main(macro, *args, **kwargs)
     except Exception, err:
         tb = traceback.format_exc()
-        return """<pre>Error in &lt;&lt;LMTrainingMatrix(%s)&gt;&gt;:\n\n%s
-        </pre>""".strip() % (argstr, tb)
+        return '<pre>' + cgi.escape(
+            'Error in <<LMTrainingMatrix(%s)>>:\n\n%s'.strip() % (argstr, tb)) + \
+            '</pre>'
