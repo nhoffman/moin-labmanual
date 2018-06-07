@@ -15,11 +15,13 @@ Options:
 
 from operator import attrgetter
 import re
+from collections import namedtuple
 
 from jinja2 import Template
 from MoinMoin import wikiutil
 from MoinMoin.Page import Page
-from moinlm.training import read_training_log
+
+from moinlm.training import read_training_log, TrainingDB
 from moinlm.utils import pivot
 
 Dependencies = ["time"]
@@ -54,6 +56,12 @@ def main(macro, pattern=None, users=None, show_missing=False, max_days=365,
     if pattern:
         rows = [row for row in rows if re.search(r'' + pattern, row.pagename)]
 
+    # add current revision of each page
+    Row = namedtuple('Row', list(TrainingDB.record._fields) + ['is_current'])
+    rows = [Row(*list(row) +
+                [row.revision == Page(request, row.pagename).get_rev()[1]])
+            for row in rows]
+
     if users:
         colnames = group_from_page(request, users)
         user_page_link = Page(request, users).link_to(request)
@@ -69,7 +77,7 @@ def main(macro, pattern=None, users=None, show_missing=False, max_days=365,
     table = pivot(rows,
                   rowattr='pagename',
                   colattr='user',
-                  cellfun=attrgetter('elapsed_days'),
+                  cellfun=attrgetter('elapsed_days', 'is_current'),
                   nullval='',
                   colnames=colnames)
 
@@ -110,12 +118,12 @@ def main(macro, pattern=None, users=None, show_missing=False, max_days=365,
   <ul>
     <li>Each cell shows the elapsed time in days since each page was read</li>
     <li>
-      Cells are <span class="ok">green</span> when a page has been read within
-      <strong>{{ max_days }}</strong>
-      days; <span class="old">yellow</span> when the page has been
-      read at some time in the past;
-      and <span class="missing">grey</span> when the page has never
-      been read.
+      Cells are <br>
+      <span class="ok">green</span> when the current revision of
+      a page has been read within <strong>{{ max_days }}</strong> days;<br>
+      <span class="old">yellow</span> when a previous revision has been
+      read within this interval; and<br>
+      <span class="missing">grey</span> when the page has never been read.
     </li>
     {% if pattern %}
       <li>Pages listed below match the pattern <strong>"{{ pattern }}"</strong></li>
@@ -143,19 +151,21 @@ def main(macro, pattern=None, users=None, show_missing=False, max_days=365,
     {% for row in rows %}
       <tr>
 	<td nowrap>{{ row[0] }}</td>
-	{% for val in row[1:] %}
+	{% for val, is_current in row[1:] %}
 	  {% if loop.index is divisibleby(2) %}
 	    {% set col_class = ' training-odd' %}
 	  {% else %}
             {% set col_class = '' %}
 	  {% endif %}
-	  {% if not val %}
-	    <td class="training missing{{ col_class }}">&nbsp;</td>
-	  {% elif val > max_days %}
-	    <td class="training old{{ col_class }}">&nbsp;</td>
-	  {% else %}
+
+      {% if val < max_days and is_current %}
 	    <td class="training ok{{ col_class }}">{{ val }}</td>
+	  {% elif val < max_days %}
+	    <td class="training old{{ col_class }}">{{ val }}</td>
+	  {% else %}
+	    <td class="training missing{{ col_class }}">&nbsp;</td>
 	  {% endif %}
+
 	{% endfor %}
       </tr>
     {% endfor %}

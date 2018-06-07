@@ -14,6 +14,10 @@ TRAINING_DB_NAME = 'moinlm.sqlite3'
 
 
 class TrainingDB(object):
+
+    record = namedtuple(
+        'Row', ['pagename', 'user', 'elapsed_days', 'date', 'revision'])
+
     def __init__(self, request, db_path=None):
         self.db_path = db_path or path.join(request.cfg.data_dir, TRAINING_DB_NAME)
         self.conn = None
@@ -75,9 +79,8 @@ class TrainingDB(object):
             cur.execute(sql)
 
         header = [col[0] for col in cur.description]
-        Row = namedtuple('Row', header)
 
-        return header, [Row(*row) for row in cur.fetchall()]
+        return header, [self.record(*row) for row in cur.fetchall()]
 
 
 def read_training_log(request, pagename=None):
