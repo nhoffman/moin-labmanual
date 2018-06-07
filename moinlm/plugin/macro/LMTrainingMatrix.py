@@ -16,6 +16,7 @@ Options:
 from operator import attrgetter
 import re
 from collections import namedtuple
+import traceback
 
 from jinja2 import Template
 from MoinMoin import wikiutil
@@ -181,6 +182,7 @@ def main(macro, pattern=None, users=None, show_missing=False, max_days=365,
         show_missing=show_missing,
         max_days=max_days,
     )
+
     return msg
 
 
@@ -191,5 +193,6 @@ def execute(macro, argstr):
             raise ValueError('trailing arguments are not allowed')
         return main(macro, *args, **kwargs)
     except Exception, err:
-        return macro.request.formatter.text(
-            "<<LMTrainingMatrix: %s>>" % err.args[0], style="color:red")
+        tb = traceback.format_exc()
+        return """<pre>Error in &lt;&lt;LMTrainingMatrix(%s)&gt;&gt;:\n\n%s
+        </pre>""".strip() % (argstr, tb)
