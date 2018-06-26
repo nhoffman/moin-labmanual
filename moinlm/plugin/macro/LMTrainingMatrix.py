@@ -13,6 +13,7 @@ Options:
 
 """
 
+import sys
 from operator import attrgetter
 import re
 from collections import namedtuple
@@ -80,7 +81,7 @@ def main(macro, pattern=None, users=None, show_missing=False, max_days=365,
                   rowattr='pagename',
                   colattr='user',
                   cellfun=attrgetter('elapsed_days', 'is_current'),
-                  nullval='',
+                  nullval=(sys.maxint, False),
                   colnames=colnames)
 
     header = next(table)
